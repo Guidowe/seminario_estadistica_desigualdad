@@ -8,7 +8,7 @@ $hover-color: #0d395f;
 // Fonts
 $font-family-sans-serif: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 $font-family-monospace: 'Fira Code', SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-$headings-font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+$headings-font-family: Roboto, 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 
 // Font sizes
 $font-size-base: 1.1rem;
@@ -20,10 +20,6 @@ $h4-font-size: $font-size-base * 1.2;
 // Colors for code blocks
 $code-block-bg: #f8f9fa;
 $code-color: #8a2be2;
-
-// TOC styles
-$toc-color: $body-color;
-$toc-active-color: $link-color;
 
 // Callout colors
 $callout-color-note: #0090e9;
@@ -259,20 +255,102 @@ figure {
   }
 }
 
+// TOC styles
+$toc-color: $body-color;
+$toc-active-color: $link-color;
+
 // TOC improvements
+/* Robobook-style TOC */
 #TOC {
-  padding: 0.5rem;
-  border-radius: 0.5rem;
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  width: 280px;
+  padding: 20px;
   background-color: #f8f9fa;
-  border: 1px solid #dee2e6;
-  font-size: 0.9rem;
-  
-  .active {
-    font-weight: 600;
-    color: $toc-active-color;
-  }
+  border-right: 1px solid #dee2e6;
+  overflow-y: auto;
+  font-size: 0.9em;
+  transition: transform 0.3s ease;
+  z-index: 1000;
 }
 
+#TOC.collapsed {
+  transform: translateX(-280px);
+}
+
+#TOC ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+#TOC ul ul {
+  padding-left: 15px;
+}
+
+#TOC li {
+  margin: 5px 0;
+}
+
+#TOC a {
+  color: #2c3e50;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+#TOC a:hover {
+  color: #3498db;
+}
+
+/* Toggle button */
+#toc-toggle {
+  position: fixed;
+  left: 280px;
+  top: 20px;
+  z-index: 1001;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  cursor: pointer;
+  border-radius: 0 4px 4px 0;
+  font-size: 18px;
+  transition: left 0.3s ease;
+}
+
+#toc-toggle:hover {
+  background-color: #2980b9;
+}
+
+#toc-toggle.collapsed {
+  left: 0;
+}
+
+// Adjust main content for toggle
+// Adjust main content for toggle and full width
+#quarto-content {
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 2rem !important;
+  padding-right: 2rem !important;
+  transition: padding-left 0.3s ease;
+  
+  &.expanded {
+    padding-left: 4rem !important;
+  }
+}
+// Override Quarto's default content width
+.quarto-container {
+  max-width: none !important;
+  width: 100% !important;
+}
+
+main.content {
+  max-width: none !important;
+  width: 100% !important;
+}
 .sidebar-title {
   font-weight: 600;
   color: #0d395f;

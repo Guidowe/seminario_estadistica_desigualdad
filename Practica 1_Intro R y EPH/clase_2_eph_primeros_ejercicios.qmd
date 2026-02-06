@@ -36,23 +36,9 @@ include-after-body:
   - ../assets/footer.html
 ---
 
-```{r}
-#| echo: false
-#| purl: false
-
-knitr::include_graphics("../img/R.jpg")
-```
-
-
 # Conceptos Principales de EPH
 
-
-## ¿Qué es la EPH?
-
 ![](../img/Marco analitico conceptual EPH.jpg)
-
-## Traduzcamos
-
 
 ### Objetivos de la EPH
 

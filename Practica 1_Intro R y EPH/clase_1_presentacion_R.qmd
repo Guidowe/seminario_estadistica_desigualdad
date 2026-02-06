@@ -1,10 +1,10 @@
 ---
-title: "Introducción a R y RStudio"
-subtitle: "Diplomatura Problemas Actuales de la Economía, el Empleo y el Comercio (CEPED - FCE - UBA)"
+title: "Introducción a la EPH"
+subtitle: "Seminario Estadística y programación para estudios del trabajo, desigualdad y pobreza"
 author-title: "DOCENTES:" 
 authors:
-  - name: Vladimiro S. Torres
-  - name: Juan Camilo Gutman
+  - name: Santiago Poy
+  - name: Guido Weksler
 output-file: "Clase 1 - Introduccion a R y RStudio" 
 format:
   html:
@@ -129,7 +129,7 @@ Lo verán abajo y a la derecha. Contiene las pestañas de **Archivos**, **Gráfi
 
 La pestaña que más nos interesará será la de **Archivos** (el resto se activarán automáticamente cuando, por ejemplo, creen y visualicen un gráfico). Ésta les proporcionará una exploración interactiva del Proyecto R actual junto con todo el directorio. Encontrarán opciones para añadir nuevas carpetas, nuevos archivos en blanco, eliminar/renombrar archivos, así como un panel de configuración (icono de engranaje) para funciones adicionales.
 
-## Diferencia entre proyectos y scripts
+s## Diferencia entre proyectos y scripts
 
 ### Scripts:
 
@@ -579,7 +579,7 @@ Otro formato con el que se van a encontrar es el formato txt. Seguiremos usando 
 ```{r}
 #| eval: FALSE
 
-eph_T324 <- read_delim(file = "bases/usu_individual_T324.txt",
+eph_T324 <- read_delim(file = "../bases_eph/usu_individual_T324.txt",
                   delim = ";",
                   col_names = TRUE)
 ```
