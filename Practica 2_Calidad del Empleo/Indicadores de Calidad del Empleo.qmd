@@ -1,11 +1,11 @@
 ---
-title: "Introducción a la EPH"
+title: "Práctica Calidad del Empleo"
 subtitle: "Seminario Estadística y programación para estudios del trabajo, desigualdad y pobreza"
 author-title: "DOCENTES:" 
 authors:
   - name: Santiago Poy
   - name: Guido Weksler
-output-file: "Clase 1 - Introduccion a La EPH" 
+output-file: "Practica 2 - Calidad del empleo" 
 format:
   html:
     embed-resources: true
@@ -15,8 +15,8 @@ format:
     toc-location: left
     toc-title: Índice
     theme:
-      light: ../assets/teoria_claro.scss
-      dark: ../assets/teoria_oscuro.scss
+      light: ../assets/practica_claro.scss
+      dark: ../assets/practica_oscuro.scss
     fig-width: 8
     fig-height: 5
     fig-format: retina
@@ -30,23 +30,18 @@ knitr:
   opts_chunk: 
     dev: [svglite, darksvglite]
     fig.ext: [.light.png, .dark.png]
-include-after-body:
-  - text: |
-      <script type="application/javascript" src="../assets/light-dark.js"></script>
+include-after-body: 
   - ../assets/footer.html
+  - ../assets/toc-toggle.html
 ---
 
 # Introducción 
 
 ## Presentación de la clase
 
-Esta clase está destinada a profundizar los conocimientos del paquete **tidyverse** mediante ejercicios vinculados al análisis de la calidad del empleo Luego de esta sección introductoria, el encuentro se organizará en 3 ejercicios: 
+Esta clase está destinada a profundizar los conocimientos del paquete **tidyverse** mediante ejercicios vinculados al análisis de la calidad del empleo. Luego de esta sección introductoria, el encuentro se organizará en 3 ejercicios: 
 
 -   El primer ejercicio consistirá en el armado de indicadores de calidad del empleo, cruzados con otras variables de la base individual. Se utilizará el paquete [**eph**](https://ropensci.github.io/eph/) para el armado de tabulados, cruzados con otras variables de la base individual.
-
--   En el segundo utilizaremos bases de datos provenientes de distintos países para realizar comparaciones internacionales sobre estimaciones de la precariedad y la informalidad laboral
-
--   El tercer ejercicio utilizará las bases de datos del proyecto [Precariedad Mundial](https://ceped-fce-uba.github.io/precariedad.mundial/) para hacer más estimaciones de comparación internacional y ver algunos comandos imporantes para el procesamiento de datos.
 
 
 ## Estimaciones sobre precariedad e informalidad laboral 
@@ -203,146 +198,12 @@ asalariados_2025_t1_signos %>%
   summarise(Poblacion = sum(PONDERA))
 ```
 
-> Consigna 2. Calcular la proporción de asalariados con al menos un signo de precariedad laboral
+> Consigna 2. Calcular la proporción de asalariados con al menos un signo de mala calidad del empleo 
 
 ```{r}
 #Consigna 2
 ```
 
 ```{r}
-PENDIENTE DE ACA EN MAS. VER SI VA ALGO INTERNACIONAL
-```
-
-# Ejercicio 2 - Comparaciones internacionales con el repositorio ```precariedad.mundial```
-
-Comenzamos por importar **base_homogenea.RDS** que contiene la información homogeneizada proveniente de las encuestas de hogares de distintos países y el archivo **metadata.xlsx** que describe las variables disponibles en dicha base y los valores que adquieren en caso de ser variables categóricas.
-
-```{r}
-# Para leer directo desde github
-
-# preca_mundial<- readRDS(gzcon(url("https://github.com/ceped-fce-uba/precariedad.mundial/raw/master/base_homogenea.RDS?download="))) 
-
-# Lectura desde las carpetas del curso
-metadata_preca<- openxlsx::read.xlsx("fuentes/Metadata.xlsx",sheet = 1)
-```
-
-Inspeccionamos la base rápidamente
-
-```{r include=FALSE}
-set.seed(18122022)
-options(scipen = 999)
-```
-
-```{r}
-preca_mundial %>% sample_n(10)
-```
-
-Si observamos algunos casos al azar, seguramente notemos que existen muchos **NA** (Not Available, también llamados *missing values*) en las distintas variables de la base de datos. Específicamente, eso ocurre en gran medida en las variables que tienen que ver con la precariedad laboral, ya que en muchos países la información provista en las encuestas de hogares resulta insuficiente para construir tales indicadores.      
-```{r,warning=FALSE}
-preca_seg_paises <- preca_mundial %>% 
-  group_by(PAIS,PRECASEG) %>% 
-  summarise(casos_ponderados = sum(WEIGHT)) %>% # Casos (ponderados) de PRECASEG por PAIS
-  group_by(PAIS) %>% 
-  mutate(porcentaje = casos_ponderados/sum(casos_ponderados), # Proporcíon de PRECASEG (0,1 y NA) por PAIS
-         porcentaje = scales::percent(porcentaje))  # Transformo a % 
-
-
-preca_seg_paises
-```
-
-Si tomamos, por ejemplo, la variable **PRECASEG**, podemos notar que en países europeos tenemos **NA** en todos los casos (ya que no existe pregunta vinculada a la cobertura en la seguridad social en la encuesta). En cambio, en Argentina tenemos un bajo de porcentaje de **NA**, pero que obedece a otra razón (dicha variable corresponde sólo a trabajadores asalariados) 
-
-## Trabajando con valores NA   
-
-Una forma usual de desechar los casos con valores missing es aplicar dentro de un filtro la función **`is.na()`**. En concreto, podemos descartar aquellos casos **NA** anteponiendo a dicha función el caracter **`!`**.     
-
-En este caso, al eliminar los **NA** podemos observar, cual es el porcentaje de precariedad laboral por falta de cobertura social  (entre los trabajadores a los que aplica dicha pregunta sólo en los países que relevan dicha información) 
-
-```{r}
-preca_seg_sin_na <- preca_mundial %>% 
-  filter(!is.na(PRECASEG)) %>% 
-  group_by(PAIS,PRECASEG) %>% 
-  summarise(casos_ponderados = sum(WEIGHT)) %>% 
-  group_by(PAIS) %>% 
-  mutate(porcentaje = casos_ponderados/sum(casos_ponderados),
-         porcentaje = scales::percent(porcentaje)) 
-
-preca_seg_sin_na
-```
-
-## Sumando desagregaciones       
-
-Al ejemplo anterior podemos desagregarlo por la variable **SEXO**, simplemente añadiendola dentro de los `group_by()` y observar así las brechas en la incidencia de la precariedad en varones y mujeres en cada uno de los países
-
-```{r}
-preca_seg_sexo <- preca_mundial %>% 
-  filter(!is.na(PRECASEG)) %>% 
-  group_by(PAIS,SEXO,PRECASEG) %>% 
-  summarise(casos_ponderados = sum(WEIGHT)) %>% 
-  group_by(PAIS,SEXO) %>% 
-  mutate(porcentaje = casos_ponderados/sum(casos_ponderados),
-         porcentaje = scales::percent(porcentaje)) 
-
-preca_seg_sexo
-```
-
-## Selection helpers     
-A la hora de escalar nuestros procedimientos, para aplicar una misma operación a distintas variables de una base de datos, tidyverse cuenta con un conjunto de herramientas denominado [**Selection language**](https://tidyselect.r-lib.org/reference/language.html). Estas herramientas permiten identificar el conjunto de columnas de las bases de datos que cumplen una determinada condición.          
-
-### starts_with()
-Por ejemplo, **starts_with()** nos permite especificar aquellas columnas cuyo nombre comienza con un determinado patrón de texto:     
-```{r}
-preca_select <- preca_mundial %>% 
-  select(PAIS,WEIGHT,starts_with("PRECA"))
-preca_select %>% head(10)
-```
-### where()     
-La función `where()` nos permite ingresar una condicion lógica a evaluar en las columnas para determinar si estas serán o no seleccionadas. Por ejemplo, evaluar si son columnas de clase numérica.
-
-```{r}
-preca_numericas <- preca_mundial %>% 
-  select(PAIS,where(is.numeric))
-
-preca_numericas  %>% head(10)
-```
-## if_all()      
-La función `if_all()` nos permite ingresar una condicion lógica a evaluar en el contenido de un conjunto de columnas para realizar un filtro. El primer argumento que requiere la función es el conjunto de columnas y el segundo la función a aplicar a cada una de ellas para  determinar los casos que serán filtrados.    
-
-Por ejemplo, podemos utilizarla para conservar únicamente aquellos casos **que no contengan NAs en ninguna de las variables vínculadas a la precariedad**  
-```{r}
-preca_completo <- preca_mundial %>% 
-  filter(
-    if_all(starts_with("PRECA"),~!is.na(.x))
-         )
-
-preca_completo %>% head(10)
-```
-
-## across() 
-La función `across()` nos permite realizar una misma operación para un conjunto de columnas . El primer argumento que requiere la función es el conjunto de columnas y el segundo la función a aplicar a cada una de ellas.    
-
-Por ejemplo, podemos utilizarla dentro de un summarise para realizar, para cada país, un promedio (muestral) de las variables relacionadas al ingreso de la ocupación princpal.   
-
-Recordatorio: la variable **ING** está expresada en moneda nacional y la variable **ING_PPA** transforma los datos a una moneda de paridad de poder adquisitivo
-```{r}
-ingreso_medio <- preca_mundial %>% 
-  group_by(PAIS) %>% 
-  summarise(across(starts_with("ING"),~ mean(.x,na.rm = T)))
-
-ingreso_medio
-```
-
-También podemos utilizarla para sumar la cantidad de valores positivos en las variables de precariedad y dividido la suma de casos totales en donde dicha variable no es NA. De esta forma, podemos obtener para cada país el % de los casos con las respectivas expresiones de precariedad.    
-
-```{r}
-preca_expresiones <- preca_mundial %>% 
-  group_by(PAIS) %>% 
-  summarise(
-    across(starts_with("PRECA"),
-           ~ sum(.x,na.rm = T)/ # Suma de casos con valor 1 en PRECA
-             sum(!is.na(.x)) # Suma de casos sin NA en PRECA_
-           )
-    ) 
-preca_expresiones
 ```
 
