@@ -1,0 +1,64 @@
+---
+title: "Prueba de formato"
+subtitle: "Seminario Estadística y programación para estudios del trabajo, desigualdad y pobreza"
+author-title: "DOCENTES:" 
+authors:
+  - name: Guido Weksler
+  - name: Santiago Poy
+output-file: "Prueba formato notas" 
+format:
+  html:
+    embed-resources: true
+    code-tools: false
+    code-copy: false
+    toc: true
+    toc-location: left
+    theme: 
+      light: assets/practica_claro.scss
+      dark:  assets/practica_oscuro.scss
+    fig-width: 8
+    fig-height: 5
+    fig-format: retina
+    warning: false
+    message: false
+    echo: true
+execute:
+  freeze: auto
+editor: source
+include-after-body: 
+  - assets/footer.html
+  - assets/toc-toggle.html
+---
+
+# Carga de informacion ####
+sedasdasdsadas
+```{r}
+2+2
+```
+sdasdsa
+
+## otra
+sdesadjasdas
+```{r}
+plot(iris)
+```
+trtdso
+## Bibliografía {.unnumbered}
+
+```{=html}
+<div id="refs" class="references csl-bib-body hanging-indent">
+
+  <div id="ref-wickham2025" class="csl-entry">
+    Wickham, H., &amp; Grolemund, G. (2023). <i>R for Data Science (2nd ed)</i>. O'Reilly Media.
+  </div>
+
+  <div id="ref-tidyverse2023" class="csl-entry">
+    Tidyverse. (2023, April). <i>Base vs. magrittr pipe</i>. Recuperado de <a href="https://www.tidyverse.org/blog/2023/04/base-vs-magrittr-pipe/">https://www.tidyverse.org/blog/2023/04/base-vs-magrittr-pipe/</a>
+  </div>
+
+  <div id="ref-dataviz" class="csl-entry">
+    DataViz Inspiration. (n.d.). RetrievedRecuperado de <a href="https://www.dataviz-inspiration.com/">https://www.dataviz-inspiration.com/</a>
+  </div>
+
+</div>
+```

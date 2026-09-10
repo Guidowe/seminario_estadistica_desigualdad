@@ -1,0 +1,697 @@
+---
+title: "Tabulados, medidas de resumen y asociación bivariada"
+---
+
+<!--
+  VARIANTE DE LA CLASE 03 -- ejemplo construido sobre GRUPOS ETARIOS.
+  Misma estructura conceptual que 03_tabulados_resumen.qmd, pero la relación
+  que se analiza es edad -> registro (en lugar de sexo -> registro).
+  Elegir una de las dos para dictar; no van las dos juntas.
+-->
+
+```{r}
+#| label: setup
+#| message: false
+#| warning: false
+
+library(tidyverse)
+library(eph)
+library(openxlsx)
+```
+
+# Objetivos de la clase
+
+Al terminar esta práctica vamos a poder:
+
+- Construir un tabulado bivariado ponderado y decidir **en qué sentido** calcular los porcentajes.
+- Entender la **fórmula del chi cuadrado**, por qué se calcula sobre frecuencias absolutas y
+  entre qué valores se mueve.
+- Leer un **test de chi cuadrado**: qué responde y qué *no* responde.
+- Calcular e interpretar **Phi** y la **V de Cramér**, y entender por qué necesitamos un
+  coeficiente estandarizado además del test.
+- Introducir una **tercera variable** como control y distinguir tres desenlaces posibles:
+  que la asociación **se mantenga**, que **cambie de intensidad según el grupo** (interacción)
+  o que **desaparezca** (relación espuria).
+
+# Repaso: de dónde partimos
+
+En las clases anteriores vimos cómo levantar la base, filtrar poblaciones y construir categorías
+con `case_when()`. Retomamos exactamente eso, porque todo el trabajo de hoy se apoya en variables
+construidas por nosotros.
+
+```{r}
+individual_25_t1 <- read.table("bases_eph/usu_individual_T125.txt",
+                               sep = ";", dec = ",", header = TRUE, fill = TRUE)
+```
+
+Nos vamos a quedar con los **ocupados asalariados de 14 a 60 años** y vamos a construir:
+
+- `registro`: la variable `PP07H` pregunta si al asalariado le realizan descuentos jubilatorios.
+  Es el indicador estándar para clasificar un empleo como **registrado** o **no registrado**.
+- `grupo_edad`: a partir de `CH06`, dos tramos: **14 a 35** y **36 a 60**.
+- `nivel_ed`: a partir de `NIVEL_ED`, tres categorías.
+- `estado_civil`: a partir de `CH07`, agrupando en **Unido/Casado** (códigos 1 y 2) y
+  **Soltero/Viudo/Separado** (códigos 3, 4 y 5).
+
+```{r}
+asalariados <- individual_25_t1 %>%
+  filter(ESTADO == 1, CAT_OCUP == 3) %>%     # ocupados asalariados
+  filter(PP07H %in% c(1, 2)) %>%             # con respuesta válida sobre descuento jubilatorio
+  filter(between(CH06, 14, 60)) %>%          # acotamos el universo a edades activas
+  mutate(
+    registro = factor(
+      case_when(PP07H == 1 ~ "Registrado",
+                PP07H == 2 ~ "No registrado"),
+      levels = c("Registrado", "No registrado")),
+
+    grupo_edad = factor(
+      case_when(CH06 <= 35 ~ "14 a 35",
+                CH06 >  35 ~ "36 a 60"),
+      levels = c("14 a 35", "36 a 60")),
+
+    nivel_ed = factor(
+      case_when(NIVEL_ED %in% c(7, 1, 2, 3) ~ "Hasta secundaria inc.",
+                NIVEL_ED %in% c(4, 5)       ~ "Secundaria completa",
+                NIVEL_ED == 6               ~ "Superior completo",
+                TRUE                        ~ "Ns/Nr"),
+      levels = c("Hasta secundaria inc.", "Secundaria completa",
+                 "Superior completo", "Ns/Nr")),
+
+    estado_civil = factor(
+      case_when(CH07 %in% c(1, 2)    ~ "Unido/Casado",
+                CH07 %in% c(3, 4, 5) ~ "Soltero/Viudo/Separado",
+                TRUE                 ~ "Ns/Nr"),
+      levels = c("Unido/Casado", "Soltero/Viudo/Separado", "Ns/Nr")))
+
+# ¿Con cuántos casos nos quedamos?
+asalariados %>%
+  summarise(casos_muestrales = n(),
+            poblacion_expandida = sum(PONDERA))
+```
+
+::: {.callout-tip appearance="simple"}
+## Por qué usamos `factor()` y no texto suelto
+
+Al declarar los niveles fijamos el **orden** en que van a aparecer en todas las tablas y gráficos
+del documento. Si dejáramos texto suelto, R los ordena alfabéticamente y "No registrado" quedaría
+antes que "Registrado", que es al revés de como uno lo lee.
+:::
+
+# Análisis bivariado: la tabla y los porcentajes
+
+## El tabulado
+
+Empecemos por lo más simple: ¿cómo se distribuye el registro según el grupo etario?
+
+```{r}
+calculate_tabulates(base = asalariados,
+                    x = "registro",
+                    y = "grupo_edad",
+                    weights = "PONDERA",
+                    add.totals = "both")
+```
+
+## ¿Porcentajes por fila o por columna?
+
+Los valores absolutos no se pueden comparar directamente, porque los dos grupos etarios no tienen
+el mismo tamaño. Necesitamos porcentajes. Pero **el sentido en que los calculamos cambia la
+pregunta que estamos respondiendo**:
+
+- **Por columna** (`add.percentage = "col"`): dentro de cada grupo etario, qué porcentaje está
+  registrado. Responde *"¿qué tan probable es estar no registrado si tenés menos de 36 años?"*.
+- **Por fila** (`add.percentage = "row"`): dentro de los no registrados, qué porcentaje son
+  jóvenes. Responde *"¿cómo se compone el universo de no registrados?"*.
+
+```{r}
+calculate_tabulates(base = asalariados,
+                    x = "registro",
+                    y = "grupo_edad",
+                    weights = "PONDERA",
+                    add.percentage = "col")
+```
+
+::: {.callout-important appearance="simple"}
+## La regla práctica
+
+Los porcentajes se calculan **en el sentido de la variable independiente**. Si pensamos que la
+edad condiciona la probabilidad de estar registrado (y no al revés), el 100% tiene que estar en
+cada grupo etario: porcentajes por columna.
+:::
+
+La diferencia entre esos dos porcentajes es nuestra medida sustantiva. La llamamos **brecha** y la
+vamos a calcular a mano, porque la vamos a necesitar varias veces:
+
+```{r}
+brecha_total <- asalariados %>%
+  group_by(grupo_edad) %>%
+  summarise(tasa_no_registro = weighted.mean(registro == "No registrado", PONDERA) * 100,
+            .groups = "drop")
+
+brecha_total
+```
+
+Entre los asalariados de 14 a 35 años el no registro alcanza a cerca del **46%**, contra menos del
+**29%** entre los de 36 a 60: una brecha de aproximadamente **17 puntos porcentuales**. La
+pregunta que sigue es: ¿esa diferencia es *real* o puede ser producto del azar muestral?
+
+# Introducción al análisis de asociación
+
+## Test de chi cuadrado: ¿hay asociación?
+
+El chi cuadrado compara la tabla que **observamos** con la tabla que **esperaríamos** si las dos
+variables fueran independientes. Si las frecuencias observadas se alejan mucho de las esperadas,
+el estadístico crece y el p-valor cae.
+
+### La fórmula
+
+$$\chi^2 = \sum_{i,j} \frac{(O_{ij} - E_{ij})^2}{E_{ij}} \qquad \text{donde} \qquad E_{ij} = \frac{f_i \times c_j}{n}$$
+
+Leída de a pedazos:
+
+- $O_{ij}$ es la frecuencia **observada** de la celda: cuántos casos cayeron efectivamente ahí.
+- $E_{ij}$ es la frecuencia **esperada** bajo independencia. Sale de multiplicar el total de la
+  fila ($f_i$) por el total de la columna ($c_j$) y dividir por el total general ($n$). Es,
+  literalmente, "si la edad no tuviera nada que ver con el registro, ¿cuánta gente debería haber
+  en esta celda dada la cantidad de jóvenes y la cantidad de no registrados que hay en total?".
+- La suma recorre **todas las celdas** de la tabla.
+
+Cada celda aporta al total en proporción a cuánto se desvía de lo esperado. La diferencia va al
+cuadrado (para que los desvíos hacia arriba y hacia abajo no se cancelen) y se divide por $E_{ij}$
+(para que un desvío de 100 casos pese distinto en una celda de 200 que en una de 20.000).
+
+::: {.callout-important}
+## Se calcula con frecuencias ABSOLUTAS, nunca con porcentajes
+
+Esta es la regla que más se viola en la práctica. El chi cuadrado necesita saber **cuántos casos
+hay**: esa información está en las frecuencias absolutas y se destruye al porcentualizar.
+
+Si le pasáramos una tabla de porcentajes por columna, cada columna sumaría 100 y el test creería
+que trabajamos con 200 casos en total. Más abajo lo comprobamos.
+
+Los porcentajes son para **interpretar** la asociación (nos dicen el sentido y la magnitud); las
+frecuencias absolutas son para **testearla**.
+:::
+
+### Qué valores puede tomar
+
+| Valor | Qué significa |
+|---|---|
+| $\chi^2 = 0$ | Independencia perfecta: $O_{ij} = E_{ij}$ en todas las celdas |
+| $\chi^2 > 0$ | Hay apartamiento respecto de la independencia |
+| **sin límite superior** | Crece con $n$ y con la cantidad de celdas de la tabla |
+
+El estadístico va de **0 a infinito**: no tiene techo. Por eso un chi cuadrado de 700 no se puede
+interpretar por sí solo, ni comparar con el de otra tabla. Lo único que se puede hacer con él es
+contrastarlo contra la distribución chi cuadrado con $(f-1) \times (c-1)$ **grados de libertad**
+—que es exactamente lo que hace el p-valor— para decidir si el apartamiento es más grande de lo
+que el azar muestral explicaría.
+
+Esa falta de techo es la razón de ser de Phi y de la V de Cramér, que vemos enseguida.
+
+::: {.callout-warning}
+## ⚠️ El error más común: no usar el ponderador en el test
+
+Los porcentajes se calculan **con** `PONDERA` (queremos estimar la población). El test de chi
+cuadrado se calcula **sin** ponderador, sobre los casos muestrales reales.
+
+¿Por qué? Porque el p-valor depende directamente del tamaño de muestra. Si le pasáramos la
+población expandida (millones de casos), *cualquier* diferencia, por mínima que sea, daría
+"altamente significativa". Estaríamos mintiéndole al test sobre cuánta información tenemos
+realmente: nuestra muestra son unos 13.800 casos, no millones.
+:::
+
+### El cálculo, paso a paso
+
+```{r}
+tabla_edad <- table(asalariados$grupo_edad, asalariados$registro)
+tabla_edad
+
+test_edad <- chisq.test(tabla_edad, correct = FALSE)
+test_edad
+```
+
+Podemos abrir el cálculo y verificar la fórmula a mano. `chisq.test()` guarda las frecuencias
+esperadas en el objeto que devuelve:
+
+```{r}
+# E = (total fila x total columna) / n
+test_edad$expected
+
+# El aporte de cada celda:  (O - E)^2 / E
+aportes <- (tabla_edad - test_edad$expected)^2 / test_edad$expected
+round(aportes, 2)
+
+# Y el chi cuadrado es simplemente la suma de esos aportes
+sum(aportes)
+```
+
+Comparen las dos tablas: entre los jóvenes se esperaban unos 2.118 no registrados bajo
+independencia y hay casi 2.900. Las cuatro celdas se desvían fuerte, y por eso el estadístico da
+alrededor de **700**.
+
+::: {.callout-note appearance="simple"}
+## Sobre `correct = FALSE`
+
+En tablas de 2x2 R aplica por defecto la corrección de continuidad de Yates. La desactivamos para
+que el chi cuadrado que obtenemos sea el mismo que usan las fórmulas de Phi y V de Cramér que
+vienen a continuación.
+:::
+
+### Comprobación 1: qué pasa si usamos porcentajes
+
+Volvamos sobre la advertencia de más arriba, pero ahora con los datos en la mano. Calculamos los
+porcentajes por columna con `prop.table()` y le damos *esa* tabla al test:
+
+```{r}
+tabla_porcentajes <- prop.table(tabla_edad, margin = 2) * 100
+round(tabla_porcentajes, 1)
+
+chisq.test(tabla_porcentajes, correct = FALSE)
+```
+
+El chi cuadrado se derrumba de **701 a menos de 11**: el mismo dato, dividido por más de 60. Lo
+único que cambió es que le hicimos creer al test que teníamos 200 casos en lugar de 13.795.
+
+En este caso puntual la asociación es tan fuerte que **igual da significativa**, así que la
+conclusión no se invierte. Pero eso es pura suerte: con una asociación algo más débil, el mismo
+error nos haría concluir que no hay ninguna relación. El número que obtenemos ya no significa nada.
+
+### Comprobación 2: el chi cuadrado crece con la muestra
+
+El chi cuadrado tiene una segunda limitación, más profunda: **crece proporcionalmente con el
+tamaño de la muestra**. Comprobémoslo partiendo la muestra a la mitad:
+
+```{r}
+set.seed(2025)
+
+asalariados %>%
+  slice_sample(prop = 0.5) %>%
+  select(grupo_edad, registro) %>%
+  table() %>%
+  chisq.test(correct = FALSE)
+```
+
+Con la mitad de los casos el chi cuadrado se reduce aproximadamente a la mitad (de ~700 a ~350),
+**aunque la relación entre las variables sea exactamente la misma**. Dicho de otro modo: el valor
+del estadístico mide, en parte, cuántos datos tenemos, no sólo cuán asociadas están las variables.
+
+Por eso el chi cuadrado responde una sola pregunta: *¿hay asociación?* (sí / no). No responde
+*¿cuánta?*. Para eso necesitamos coeficientes estandarizados.
+
+## Coeficientes estandarizados: Phi y V de Cramér
+
+Ambos se construyen dividiendo el chi cuadrado por el tamaño de la muestra, para sacarle
+justamente esa dependencia:
+
+$$\phi = \sqrt{\frac{\chi^2}{n}} \qquad \qquad V = \sqrt{\frac{\chi^2}{n \times \min(f-1,\ c-1)}}$$
+
+donde $f$ y $c$ son la cantidad de filas y columnas de la tabla.
+
+| Coeficiente | Cuándo se usa | Rango |
+|---|---|---|
+| **Phi** | Solo tablas de 2x2 | 0 a 1 |
+| **V de Cramér** | Cualquier tabla | 0 a 1 |
+
+En una tabla de 2x2, $\min(f-1, c-1) = 1$ y por lo tanto **Phi y V de Cramér dan exactamente lo
+mismo**. La V es la generalización de Phi a tablas más grandes.
+
+```{r}
+n_casos <- sum(tabla_edad)
+chi2     <- unname(test_edad$statistic)
+
+phi      <- sqrt(chi2 / n_casos)
+v_cramer <- sqrt(chi2 / (n_casos * (min(dim(tabla_edad)) - 1)))
+
+tibble(chi2 = chi2, n = n_casos, phi = phi, v_cramer = v_cramer)
+```
+
+### ¿Cómo se lee una V de Cramér?
+
+Es una escala de 0 (independencia perfecta) a 1 (asociación perfecta). Como referencia orientativa:
+
+| Valor de V | Lectura |
+|---|---|
+| menos de 0,10 | asociación muy débil / despreciable |
+| 0,10 a 0,20 | débil |
+| 0,20 a 0,40 | moderada |
+| más de 0,40 | fuerte |
+
+Nuestro caso da **V ≈ 0,23**: una asociación **moderada**. La edad no determina el registro, pero
+lo ordena de manera clara y sustantiva, no sólo estadísticamente.
+
+::: {.callout-important}
+## Las dos preguntas, otra vez
+
+El test dice que la brecha de 17 puntos **no es azar** (p prácticamente igual a cero). La V dice
+que esa brecha, además, **es importante**: 0,23 sobre una escala de 0 a 1.
+
+Presten atención a que son dos afirmaciones independientes. Con 13.800 casos, una brecha de 2
+puntos también daría "altamente significativa", pero tendría una V cercana a 0,03 y no
+justificaría ninguna conclusión sustantiva. Con muestras grandes, *significativo* e *importante*
+dejan de ser sinónimos, y hace falta reportar los dos.
+:::
+
+## Una función propia para no repetir código
+
+Vamos a calcular estos coeficientes muchas veces sobre subgrupos distintos. Escribamos una función
+que devuelva todo junto, en formato `tibble` para que se integre con el flujo tidyverse:
+
+```{r}
+coef_asociacion <- function(datos, x, y) {
+
+  tabla <- table(datos[[x]], datos[[y]])
+  test  <- chisq.test(tabla, correct = FALSE)
+  n     <- sum(tabla)
+
+  tibble(
+    n        = n,
+    chi2     = round(unname(test$statistic), 1),
+    gl       = unname(test$parameter),
+    p_valor  = signif(test$p.value, 3),
+    v_cramer = round(sqrt(unname(test$statistic) / (n * (min(dim(tabla)) - 1))), 3))
+}
+
+# La probamos: tiene que devolver lo mismo que calculamos a mano
+coef_asociacion(asalariados, "grupo_edad", "registro")
+```
+
+# Tres variables: qué puede pasar al controlar
+
+Hasta acá miramos dos variables. Casi siempre eso alcanza para *describir*, pero no para
+*explicar*. Al introducir una tercera variable como **control** —es decir, al repetir el análisis
+dentro de cada categoría de esa tercera variable— pueden pasar tres cosas distintas:
+
+1. La asociación **se mantiene igual** en todos los grupos: la relación original es robusta.
+2. La asociación **cambia de intensidad** según el grupo: hay **interacción**.
+3. La asociación **desaparece** en todos los grupos: la relación era **espuria**.
+
+Vamos a ver un caso de cada tipo. Y vamos a ver también que el desenlace no se decide de antemano:
+se pone a prueba.
+
+## Caso 1: interacción (control por nivel educativo)
+
+Sabemos que el nivel educativo es un determinante fuerte del registro. La pregunta es: **¿el
+castigo etario es el mismo en todos los niveles educativos?**
+
+Repetimos el análisis dentro de cada nivel. En tidyverse, esta operación se hace con `group_by()` +
+`group_modify()`:
+
+```{r}
+base_ed <- asalariados %>%
+  filter(nivel_ed != "Ns/Nr") %>%
+  droplevels()
+
+coef_por_educ <- base_ed %>%
+  group_by(nivel_ed) %>%
+  group_modify(~ coef_asociacion(.x, "grupo_edad", "registro")) %>%
+  ungroup()
+
+brecha_por_educ <- base_ed %>%
+  group_by(nivel_ed, grupo_edad) %>%
+  summarise(tasa_no_registro = weighted.mean(registro == "No registrado", PONDERA) * 100,
+            .groups = "drop") %>%
+  pivot_wider(names_from = grupo_edad, values_from = tasa_no_registro) %>%
+  rename(jovenes = `14 a 35`, adultos = `36 a 60`) %>%
+  mutate(brecha_pp = round(jovenes - adultos, 1),
+         razon     = round(jovenes / adultos, 2))
+
+resumen_educ <- brecha_por_educ %>%
+  left_join(coef_por_educ, by = "nivel_ed")
+
+resumen_educ
+```
+
+::: {.callout-note appearance="simple"}
+## Un detalle de sintaxis: los acentos graves
+
+`14 a 35` no es un nombre válido de columna en R (tiene espacios), así que después de
+`pivot_wider()` hay que escribirlo entre **acentos graves**: `` `14 a 35` ``. Los van a necesitar
+cada vez que una categoría con espacios se convierta en nombre de columna.
+:::
+
+```{r}
+#| label: fig-interaccion
+#| fig-cap: "Tasa de no registro por grupo etario y nivel educativo. Asalariados de 14 a 60 años, total aglomerados EPH, 1er trimestre 2025."
+
+base_ed %>%
+  group_by(nivel_ed, grupo_edad) %>%
+  summarise(tasa = weighted.mean(registro == "No registrado", PONDERA) * 100,
+            .groups = "drop") %>%
+  ggplot(aes(x = nivel_ed, y = tasa, fill = grupo_edad)) +
+  geom_col(position = "dodge") +
+  geom_text(aes(label = paste0(round(tasa, 1), "%")),
+            position = position_dodge(width = 0.9), vjust = -0.4, size = 3.2) +
+  scale_fill_manual(values = c("14 a 35" = "#d95f02", "36 a 60" = "#7570b3")) +
+  labs(x = NULL, y = "% no registrado", fill = "Grupo etario",
+       title = "La brecha etaria se achica entre quienes completaron estudios superiores") +
+  theme_minimal()
+```
+
+::: {.callout-important}
+## Cómo se lee este cuadro
+
+La asociación **no desaparece en ningún nivel educativo**: los jóvenes están más desprotegidos en
+los tres. Pero **su intensidad cambia**:
+
+- Entre quienes no completaron el secundario, la brecha es de casi **19 puntos** (V ≈ 0,23).
+- Entre quienes completaron el secundario, de casi **17 puntos** (V ≈ 0,24).
+- Entre quienes tienen **estudios superiores completos**, se reduce a menos de **9 puntos**
+  (V ≈ 0,17).
+
+Eso es una **interacción**: el efecto de la edad *depende* del nivel educativo. Credencial
+educativa mediante, la penalidad por ser joven se corta casi por la mitad.
+:::
+
+::: {.callout-tip}
+## Una sutileza que conviene discutir: brecha absoluta vs. brecha relativa
+
+Miren la columna `razon` (el cociente entre la tasa de los jóvenes y la de los adultos):
+
+| Nivel educativo | Brecha en puntos | Razón jóvenes/adultos |
+|---|---|---|
+| Hasta secundaria inc. | −18,7 pp | 1,37 |
+| Secundaria completa | −16,8 pp | 1,62 |
+| Superior completo | −8,7 pp | 1,68 |
+
+En **puntos porcentuales** la brecha se achica con la educación. En términos **relativos** se
+agranda: entre los universitarios, un joven tiene 1,7 veces más chances de estar no registrado que
+un adulto, contra 1,4 veces entre quienes no terminaron el secundario.
+
+Las dos lecturas son correctas y no se contradicen: es la diferencia entre medir una desigualdad
+en forma aditiva o multiplicativa. Cuál elegir depende de la pregunta, pero conviene saber que la
+elección **puede cambiar el sentido de la conclusión**.
+:::
+
+## Caso 2: poner a prueba una hipótesis de espuriedad
+
+Ahora vamos a hacer algo distinto: en vez de explorar, vamos a **testear una hipótesis explícita**.
+
+Es bien sabido que las personas solteras tienen peores condiciones laborales que las casadas o
+unidas. Miremos el dato:
+
+```{r}
+base_ec <- asalariados %>%
+  filter(estado_civil != "Ns/Nr") %>%
+  droplevels()
+
+calculate_tabulates(base = base_ec,
+                    x = "registro",
+                    y = "estado_civil",
+                    weights = "PONDERA",
+                    add.percentage = "col")
+
+coef_asociacion(base_ec, "estado_civil", "registro")
+```
+
+La asociación existe y no es chica: una brecha de casi **16 puntos** y V ≈ 0,18.
+
+Pero acá hay una sospecha razonable. **La soltería no es independiente de la edad**: la gente
+joven está mucho más frecuentemente soltera. Y ya vimos que la gente joven está mucho más
+frecuentemente no registrada. Puede ser que la "penalidad por soltería" no exista en absoluto y
+sea sólo un reflejo de la edad.
+
+Esa es exactamente la estructura de una **relación espuria**: una tercera variable Z asociada
+simultáneamente con X y con Y, que produce una asociación aparente entre ellas.
+
+### Paso 1: verificar que Z está asociada con X y con Y
+
+Si la edad no estuviera asociada con el estado civil, controlar por ella no podría cambiar nada.
+Verifiquémoslo antes de seguir:
+
+```{r}
+# Z <-> X : ¿la composición etaria difiere según estado civil?
+calculate_tabulates(base = base_ec,
+                    x = "grupo_edad", y = "estado_civil",
+                    weights = "PONDERA", add.percentage = "col")
+
+# Z <-> Y : ya lo sabemos, es la relación con la que abrimos la clase
+coef_asociacion(base_ec, "grupo_edad", "registro")
+```
+
+Se cumplen las dos condiciones: entre las personas solteras/viudas/separadas casi el **58%** tiene
+menos de 36 años, contra menos del **30%** entre las unidas o casadas. La hipótesis de espuriedad
+es plausible. Ahora hay que ponerla a prueba.
+
+### Paso 2: controlar
+
+```{r}
+coef_por_edad <- base_ec %>%
+  group_by(grupo_edad) %>%
+  group_modify(~ coef_asociacion(.x, "estado_civil", "registro")) %>%
+  ungroup()
+
+brecha_por_edad <- base_ec %>%
+  group_by(grupo_edad, estado_civil) %>%
+  summarise(tasa_no_registro = weighted.mean(registro == "No registrado", PONDERA) * 100,
+            .groups = "drop") %>%
+  pivot_wider(names_from = estado_civil, values_from = tasa_no_registro) %>%
+  rename(solteros = `Soltero/Viudo/Separado`, unidos = `Unido/Casado`) %>%
+  mutate(brecha_pp = round(solteros - unidos, 1))
+
+brecha_por_edad %>%
+  left_join(coef_por_edad, by = "grupo_edad")
+```
+
+### Paso 3: interpretar
+
+::: {.callout-important}
+## La hipótesis no se confirma
+
+Si la relación fuera espuria, dentro de cada grupo etario la brecha debería **desaparecer**. No
+pasa eso:
+
+- Entre los de **14 a 35**: la brecha es de unos **15 puntos** (V ≈ 0,16). Prácticamente idéntica
+  a la brecha total.
+- Entre los de **36 a 60**: se reduce a unos **10 puntos** (V ≈ 0,11), pero sigue siendo
+  claramente significativa.
+
+Conclusión: la relación entre soltería y no registro **no es espuria**. La edad explica una parte
+—la V baja de 0,18 a 0,16 y 0,11— pero la asociación **sobrevive al control en los dos grupos**.
+Hay algo propio de la situación conyugal que se asocia con la calidad del empleo, más allá de la
+edad.
+
+A esto se lo llama **atenuación parcial**: el tercer desenlace posible, y el más frecuente en
+datos reales.
+:::
+
+::: {.callout-tip}
+## ¿Y si controlamos con más finura?
+
+Nuestro control es grueso: dos grupos etarios. Dentro del tramo "14 a 35" conviven personas de 18
+y de 34, con situaciones muy distintas. Un control más fino debería absorber más composición.
+
+Probémoslo con cinco tramos:
+
+```{r}
+base_ec %>%
+  mutate(edad_fina = cut(CH06,
+                         breaks = c(13, 24, 34, 44, 54, 60),
+                         labels = c("14 a 24", "25 a 34", "35 a 44",
+                                    "45 a 54", "55 a 60"))) %>%
+  group_by(edad_fina) %>%
+  group_modify(~ coef_asociacion(.x, "estado_civil", "registro")) %>%
+  ungroup()
+```
+
+Efectivamente: la V promedio baja de 0,18 a alrededor de **0,11**. La edad explica cerca del 40%
+de la asociación original. Pero incluso así **la relación sigue viva y significativa en los cinco
+tramos**.
+
+Moraleja metodológica: *cuánto* controlamos importa. Un control grueso puede dejar pasar
+composición y hacernos creer que una relación es más propia de lo que es. Pero por más fino que
+sea el control, si la asociación no se va, no se va.
+:::
+
+## Resumen: los tres desenlaces
+
+| Qué observamos al controlar por Z | Nombre | Qué concluimos | Nuestro ejemplo |
+|---|---|---|---|
+| La asociación se mantiene igual en todos los grupos | Relación robusta | X e Y se relacionan con independencia de Z | — |
+| Persiste, pero con **intensidad distinta** por grupo | **Interacción** | La relación X-Y **depende** de Z | Edad × educación |
+| Se **atenúa** pero no desaparece | Atenuación parcial | Z explica una parte; queda un efecto propio | Soltería, controlada por edad |
+| **Desaparece** o se invierte en todos los grupos | **Relación espuria** | La relación X-Y no era propia: la producía Z | (ver Ejercicio 3) |
+
+Lo importante: la operación estadística es siempre la misma —partir la muestra según Z y
+recalcular—. Lo que cambia es el **patrón de resultados**, y ese patrón no se decide de antemano.
+Uno formula la hipótesis, la pone a prueba, y acepta lo que digan los datos.
+
+# Flujo de trabajo: exportar los resultados
+
+Todo lo que produjimos son `data.frame`s, así que exportarlos a Excel es directo. Pasando una
+**lista con nombres**, cada elemento va a una hoja distinta del mismo archivo:
+
+```{r}
+#| eval: false
+
+write.xlsx(
+  list("brecha_total"      = brecha_total,
+       "interaccion_educ"  = resumen_educ,
+       "control_edad"      = brecha_por_edad %>% left_join(coef_por_edad, by = "grupo_edad")),
+  file = "Resultados/clase03_asociacion.xlsx")
+```
+
+::: {.callout-tip appearance="simple"}
+## Regla de oro del flujo de trabajo
+
+Nunca copien números a mano de la consola a un informe. Si el resultado cambia (porque cambió la
+base, un filtro o una categoría), el informe se actualiza solo re-corriendo el script. Todo número
+que aparezca en un texto tiene que poder rastrearse hasta la línea de código que lo produjo.
+:::
+
+# Síntesis
+
+Lo que vimos hoy:
+
+| Función | Para qué sirve |
+|---|---|
+| `calculate_tabulates()` | Tabulado ponderado, con totales y porcentajes por fila o columna |
+| `weighted.mean(x == "valor", PONDERA)` | Proporción ponderada de una categoría |
+| `table()` | Tabla de contingencia **sin ponderar**, insumo del test |
+| `chisq.test(tabla, correct = FALSE)` | Test de independencia: *¿hay* asociación? Va con frecuencias **absolutas** |
+| `test$expected` | Frecuencias esperadas bajo independencia, $E_{ij} = f_i \times c_j / n$ |
+| `prop.table(tabla, margin = 2)` | Porcentajes por columna. Sirven para **interpretar**, no para testear |
+| `sqrt(chi2 / n)` | Phi: intensidad de la asociación en tablas 2x2 |
+| `sqrt(chi2 / (n * min(f-1, c-1)))` | V de Cramér: idem, para cualquier tabla |
+| `group_by()` + `group_modify()` | Repetir un análisis completo dentro de cada subgrupo |
+| `pivot_wider()` | Pasar de formato largo a ancho para comparar columnas |
+| `left_join()` | Unir dos resultados por una clave común |
+| `write.xlsx(list(...))` | Exportar varios cuadros a un mismo Excel, en hojas separadas |
+
+Y las tres ideas de fondo:
+
+1. El **chi cuadrado** ($\sum (O-E)^2/E$, sobre frecuencias absolutas, de 0 a infinito) dice si
+   hay asociación; **Phi y V de Cramér** (de 0 a 1) dicen cuánta. Con muestras grandes,
+   significativo no es lo mismo que importante.
+2. Introducir una tercera variable puede revelar una **interacción**: un mismo efecto promedio
+   puede esconder efectos muy distintos según el subgrupo.
+3. La **espuriedad es una hipótesis, no un resultado**. Se formula, se pone a prueba y a veces
+   —como acá— los datos no la confirman. Que una asociación sobreviva al control es evidencia a
+   favor de que es propia.
+
+# Ejercicios
+
+La consigna de la práctica está en `clases/03_tabulados_resumen/ejercicios/03_ejercicios_edad.R`.
+
+# Referencias {.unnumbered}
+
+```{=html}
+<div id="refs" class="references csl-bib-body hanging-indent">
+
+  <div id="ref-cramer" class="csl-entry">
+    Cramér, H. (1946). <i>Mathematical Methods of Statistics</i>. Princeton University Press.
+  </div>
+
+  <div id="ref-simpson" class="csl-entry">
+    Simpson, E. H. (1951). The Interpretation of Interaction in Contingency Tables. <i>Journal of the Royal Statistical Society, Series B</i>, 13(2), 238-241.
+  </div>
+
+  <div id="ref-lazarsfeld" class="csl-entry">
+    Lazarsfeld, P. F. (1955). The Interpretation of Statistical Relations as a Research Operation. En P. F. Lazarsfeld y M. Rosenberg (eds.), <i>The Language of Social Research</i> (pp. 115-125). Glencoe: The Free Press.
+  </div>
+
+  <div id="ref-indec-eph" class="csl-entry">
+    INDEC. (2025). <i>Encuesta Permanente de Hogares. Diseño de registro y estructura para las bases de microdatos individual y hogar</i>. Instituto Nacional de Estadística y Censos. Recuperado de <a href="https://www.indec.gob.ar/indec/web/Institucional-Indec-BasesDeDatos" target="_blank" rel="noopener noreferrer">https://www.indec.gob.ar/indec/web/Institucional-Indec-BasesDeDatos</a>
+  </div>
+
+</div>
+```

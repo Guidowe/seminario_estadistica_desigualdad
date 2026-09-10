@@ -1,0 +1,29 @@
+# Sesion de R / RStudio
+.Rhistory
+.RData
+.Rproj.user/
+.Ruserdata
+
+# Cache de Quarto
+/.quarto/
+_freeze/
+
+# Salidas generadas por _docente/build.R
+# (se regeneran con un comando; no tiene sentido versionarlas)
+clases/**/*.html
+clases/**/*_files/
+clases/**/*.R
+!clases/**/ejercicios/*.R
+
+# Paquete que se entrega a estudiantes
+entrega/
+*.zip
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Salidas que generan los estudiantes al correr los scripts
+Resultados/*
+!Resultados/.gitkeep
+.positai

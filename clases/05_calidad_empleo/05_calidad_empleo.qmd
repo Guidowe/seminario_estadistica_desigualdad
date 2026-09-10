@@ -1,0 +1,415 @@
+---
+title: "Informalidad y calidad del empleo"
+---
+# Introducción 
+
+## Presentación de la clase
+
+Esta clase está destinada a profundizar los conocimientos del paquete **tidyverse** mediante ejercicios vinculados al análisis de la calidad del empleo. Luego de esta sección introductoria, el encuentro se organizará en 3 ejercicios: 
+
+-   El primer ejercicio consistirá en el armado de indicadores de calidad del empleo, cruzados con otras variables de la base individual. Se utilizará el paquete [**eph**](https://ropensci.github.io/eph/) para el armado de tabulados, cruzados con otras variables de la base individual.
+
+-   En el segundo ejercicio haremos unas breves estimaciones con las nuevas nociones de *sector informal* y *empleo informal* de la EPH.
+
+-   El tercer ejercicio consistirá en la utilización del paquete [**eph**](https://ropensci.github.io/eph/) para la descarga de una base de microdatos de la encuesta y el armado de indicadores de calidad del empleo, cruzados con otras variables de la base individual.
+
+
+## Estimaciones sobre precariedad e informalidad laboral 
+
+Cuando trabajamos con estadísticas laborales, muchas veces queremos encontrar la expresión empírica de ideas, categorías o conceptos en las características de la población estudiada. Al proceso de ‘bajar’ esas ideas a mediciones o indicadores se lo llama operacionalización. Como las encuestas de hogares muchas veces no tienen el mismo diseño, es nuestra tarea elegir qué preguntas/variables vamos a tomar en consideración.
+
+A lo largo de esta clase vamos a trabajar con dos conceptos muy utilizados en los estudios laborales: la *informalidad* y *la calidad del empleo*.
+
+La definición de **sector informal** tradicionalmente hacía referencia a una característica típica de los mercados de trabajo latinoamericanos, donde es muy extendido el empleo en establecimientos pequeños y de muy baja productividad. La definición ‘clásica’ del Sector Informal Urbano del PREALC-OIT, está asociada así a la dimensión productiva de la unidad en la que se realiza la actividad laboral. Así, por "informalidad" esta noción apuntaba a identificar los empleos en establecimientos con escaso capital, baja escala y baja tecnología, en muchos casos en unidades productivas unipersonales. ¿Cómo se operacionalizaba esta noción? Hay muchas variantes en la literatura, pero un criterio bastante difundido para clasificar a una persona como integrante del Sector Informal incluía:
+
+-   Asalariado/a en establecimientos de hasta 5 personas
+
+-   Patrones no profesionales en establecimientos de hasta 5 personas
+
+-   Cuentapropistas no profesionales
+
+-   Trabajador/a familiar sin salario
+
+Recientemente, la OIT revisó la noción del **sector informal**, asociandola a un criterio más bien legal o de registro de la actividad económica. Aparece así una distinción entre *sector informal* (característica que refiere a la inexistencia de una formalización legal de la actividad económica de una unidad productiva) y el *empleo informal* (que refiere estríctamente a la formalización de la relación laboral). Esta redifinición implica que:
+
+-   Puede existir *empleo informal* dentro del *sector formal*, por ejemplo, en caso de que un individuo este trabajando sin un contrato legal para una empresa que está constituída como sociedad (que declara y tributa por su actividad económica).
+
+-   Las Encuestas de Hogares incorporaran preguntas para distinguir sector/empleo formal e informal. Sinteticamente, en el caso de la EPH, desde el 4to trimestre de 2024 se incorporaron preguntas para tratar de identificar si los asalariados no registrados pertenecen a unidades formales o informales y preguntas para identificar si los trabajadores independientes formalizan o no su actividad económica (más allá de la realización de aportes jubilatorios propios)
+
+-   La noción del sector formal comienza a alejarse cada vez más de la noción de **calidad del empleo**, que refiere a distintas dimensiones con las que se puede caracterizar a un empleo. Estas van desde las garantías de cumplimiento de derechos laborales, la suficiencia del ingreso percibido, la estabilidad en el puesto, la cobertura frente a riesgos del trabajo, entre otras. La calidad del empleo puede vincularse a un ‘tipo ideal’ de empleo protegido (con contrato legal, por tiempo indeterminado, tiempo completo, con seguridad social, seguro médico, vacaciones pagas, etc.). 
+
+
+# Carga de paquetes y base
+
+Antes de empezar con los ejercicios, cargamos los paquetes en nuestro entonrno de trabajo.
+
+```{r, warning=FALSE,message=FALSE}
+library(tidyverse)
+library(openxlsx)
+library(eph)
+```
+
+## Levantamos la base de microdatos 
+
+```{r}
+individual_25_t1 <-
+  read.table("bases_eph/usu_individual_T125.txt",
+  sep = ";",
+  dec = ",",
+  header = TRUE,
+  fill = TRUE )
+```
+
+
+# Formalidad
+
+## Criterio legal (nuevas variables)
+
+Desde el 4to trimestre de 2024 la EPH incorpora dos variables ya construidas por INDEC que
+operacionalizan la definición "legal" o de registro: `SECTOR` (formal / informal / hogares) y
+`EMPLEO` (formal / informal). Empecemos por recodificarlas con etiquetas legibles, junto con la
+categoría ocupacional, que vamos a usar para desagregar.
+
+```{r}
+ocupados <- individual_25_t1 %>%
+  filter(ESTADO == 1) %>%
+  mutate(
+    cat_ocup = factor(
+      case_when(CAT_OCUP == 1 ~ "Patrón",
+                CAT_OCUP == 2 ~ "Cuenta propia",
+                CAT_OCUP == 3 ~ "Asalariado",
+                CAT_OCUP == 4 ~ "Trab. familiar s/rem.",
+                TRUE          ~ "Ns/Nr"),
+      levels = c("Patrón","Cuenta propia","Asalariado","Trab. familiar s/rem.","Ns/Nr")),
+    sector_legal =
+      case_when(SECTOR == 1 ~ "Sector formal",
+                SECTOR == 2 ~ "Sector informal",
+                SECTOR == 3 ~ "Hogares",
+                TRUE        ~ "Ns/Nr"),
+    empleo_legal =
+      case_when(EMPLEO == 1 ~ "Empleo formal",
+                EMPLEO == 2 ~ "Empleo informal",
+                TRUE        ~ "Ns/Nr"))
+```
+
+El cruce entre ambas variables es el que muestra el punto conceptual de la nueva definición: hay
+**empleo informal dentro del sector formal**.
+
+```{r}
+calculate_tabulates(base = ocupados,
+                    x = "sector_legal",
+                    y = "empleo_legal",
+                    weights = "PONDERA",
+                    add.totals = "both")
+```
+
+¿Qué peso tiene el empleo formal/informal en la totalidad de ocupados de cada sector?. Observemos esto en términos porcentuales con `add.percentage = "row"`
+```{r}
+calculate_tabulates(base = ocupados,
+                    x = "sector_legal",
+                    y = "empleo_legal",
+                    weights = "PONDERA",
+                    add.percentage = "row")
+```
+### Desagregación s/ categoría ocupacional
+
+Agreguemos la categoría ocupacional. Con `add.percentage = "col"` leemos la **tasa de empleo informal dentro de cada categoría**.
+
+```{r}
+calculate_tabulates(base = ocupados,
+                    x = "empleo_legal",
+                    y = "cat_ocup",
+                    weights = "PONDERA",
+                    add.percentage = "col")
+```
+
+
+## Criterio productivo: el Sector Informal Urbano (SIU)
+
+Vamos ahora a construir *a mano* la noción "clásica" del SIU que presentamos en la introducción.
+A diferencia del criterio legal, acá no hay una variable ya hecha: tenemos que combinar la
+**categoría ocupacional**, el **tamaño del establecimiento** y la **calificación del puesto**.
+
+### `organize_cno()`: 
+
+La EPH no trae una variable de calificación lista para usar. Lo que trae es `PP04D_COD`, el
+código de la ocupación según el **Clasificador Nacional de Ocupaciones (CNO-2001)**: un código de
+5 dígitos donde cada posición codifica una dimensión distinta del puesto.
+
+La función `organize_cno()` del paquete `eph` parte ese código y devuelve la base con **4 columnas nuevas**.
+
+| Columna nueva | Dígitos del CNO | Qué informa |
+|---------------|-----------------|-------------|
+| `CATEGORIA`   | 1 y 2 | Rama / tipo de ocupación (ej. "Ocupaciones de la construcción edilicia...") |
+| `JERARQUIA`   | 3     | Dirección / Cuenta propia / Jefes / Trabajadores asalariados |
+| `TECNOLOGIA`  | 4     | Sin operación de máquina / maquinaria electromecánica / sistemas informatizados |
+| `CALIFICACION`| 5     | **Profesionales / Técnicos / Operativos / No calificados** |
+
+La que necesitamos es `CALIFICACION`: es la que nos permite separar al cuentapropista profesional
+(un abogado con estudio propio, que claramente *no* es sector informal) del cuentapropista no
+profesional (un vendedor ambulante, que sí lo es). 
+
+```{r}
+ocupados_cno <- ocupados %>%
+  organize_cno()
+
+# Miramos qué quedó
+ocupados_cno %>%
+  count(CALIFICACION, wt = PONDERA, sort = TRUE)
+```
+
+### Armamos la clasificación
+
+Necesitamos también el tamaño del establecimiento con el corte de PREALC, que es **hasta 5
+ocupados**.un detalle práctico: `PP04C` tiene un 99 de "no sabe", pero la EPH repregunta
+en `PP04C99` con tramos más gruesos (1 = hasta 5; 2 = de 6 a 40; 3 = más de 40). Usando las dos
+juntas recuperamos buena parte de los casos perdidos.
+
+::: {.callout-warning appearance="simple"}
+## Una simplificación deliberada
+
+Esta operacionalización es una versión reducida de la que se usa en la literatura (que, a su vez, no es únivoca). Por ejemplo, suele usarse la variable que identifica los planes de empleo. El grupo "Ns/Nr" son
+básicamente asalariados que no informaron el tamaño del establecimiento.
+:::
+```{r}
+ocupados_siu <- ocupados_cno %>%
+  mutate(
+    # 1) Tamaño del establecimiento, con el corte de 5 ocupados
+    tamanio_siu =
+      case_when(PP04C %in% 1:5                    ~ "Hasta 5",
+                PP04C %in% 6:12                   ~ "Más de 5",
+                PP04C == 99 & PP04C99 == 1        ~ "Hasta 5",
+                PP04C == 99 & PP04C99 %in% c(2,3) ~ "Más de 5",
+                TRUE                              ~ "Ns/Nr"),
+
+    # 2) ¿El puesto es profesional? (viene de organize_cno)
+    profesional = if_else(CALIFICACION == "Profesionales", TRUE, FALSE, missing = FALSE),
+
+    # 3) La clasificación PREALC propiamente dicha
+    grupos_siu =
+      case_when(
+        PP04B1 == 1                                            ~ "Serv. Dom",      # servicio doméstico
+        PP04A  == 1                                            ~ "S. Pub",   # sector público
+        CAT_OCUP == 4                                          ~ "TFSR",      # familiar s/ remuneración
+        CAT_OCUP == 2 & !profesional                           ~ "CP No Prof",      # cuenta propia no profesional
+        CAT_OCUP == 2 &  profesional                           ~ "CP Prof",
+        CAT_OCUP == 1 & tamanio_siu == "Hasta 5" & !profesional ~ "Patron Micro",     # patrón de microempresa
+        CAT_OCUP == 1                                          ~ "Patron No Micro",
+        CAT_OCUP == 3 & tamanio_siu == "Hasta 5"               ~ "Asal Micro",      # asalariado de microempresa
+        CAT_OCUP == 3 & tamanio_siu == "Más de 5"              ~ "Asal No Micro",
+        TRUE                                                   ~ "Ns/Nr"),
+        # 4) La clasificación PREALC propiamente dicha
+    siu_productivo = case_when(
+      grupos_siu %in% c("Serv. Dom","TFSR",
+                        "CP No Prof","Patron Micro",
+                        "Asal Micro") ~ "Microinformal",
+      grupos_siu == "S. Pub" ~ "Público",
+      grupos_siu %in% c("Asal No Micro","Patron No Micro","CP Prof") ~ "Formal Privado",
+        TRUE ~ "Ns/Nr")
+    )
+```
+
+::: {.callout-note appearance="simple"}
+## Sobre el orden de las condiciones
+
+`case_when()` evalúa **de arriba hacia abajo** y se queda con la primera condición que se cumple.
+Por eso el servicio doméstico va primero (es SIU por definición, sin importar el tamaño) y el
+sector público inmediatamente después (nunca es SIU, aunque sea una repartición chica). Cambiar el
+orden cambia el resultado.
+:::
+
+Veamos cuánto pesa el SIU sobre el total de ocupados
+
+```{r}
+calculate_tabulates(base = ocupados_siu,
+                    x = "siu_productivo",
+                    weights = "PONDERA",
+                    add.percentage = "col")
+
+```
+
+Cuando armamos clasificaciones, una típica tarea es chequear quienes son los casos que no podemos asingar. En concreto, ¿quienes son los "Ns/Nr"? Vemos acá que son todos asalariados (privados) sin un tamaño de establecimiento asignado
+```{r}
+chequeo_resto <- ocupados_siu %>% 
+  filter(siu_productivo == "Ns/Nr")
+
+calculate_tabulates(chequeo_resto,
+                    "tamanio_siu", 
+                    "CAT_OCUP",
+                    weights = "PONDERA")
+```
+
+¿Cómo se compone cada sector en términos de los grupos creados?
+```{r}
+
+siu_grupos<- calculate_tabulates(base = ocupados_siu,
+                    x = "siu_productivo",
+                    y = "grupos_siu",
+                    add.percentage = "row",
+                    weights = "PONDERA")
+kableExtra::kable(siu_grupos)
+```
+
+Y cómo se compone por categoría ocupacional:
+
+```{r}
+calculate_tabulates(base = ocupados_siu,
+                    x = "siu_productivo",
+                    y = "cat_ocup",
+                    weights = "PONDERA",
+                    add.percentage = "row")
+```
+
+
+
+## Comparando los dos criterios
+
+Ahora tenemos dos clasificaciones del mismo universo de ocupados, construidas con lógicas
+distintas: una **productiva** (¿cómo es la unidad donde trabaja?) y una **legal** (¿está
+registrada la actividad?).
+
+```{r}
+calculate_tabulates(base = ocupados_siu,
+                    x = "siu_productivo",
+                    y = "sector_legal",
+                    weights = "PONDERA",
+                    add.totals = "both")
+```
+
+# Indicadores de Calidad del Empleo
+Para presentar un ejercicio sobre la calidad del empleo, aplicaremos un filtro para conservar únicamente a la población asalariada.
+
+Consideremos las siguiente tres variables como expresiones que hacen a la precariedad laboral entre los asalariados:\
+- la falta de descuentos jubilatorios\
+- El empleo de jornada part-time involuntario\
+- El empleo por tiempo determinado
+
+```{r}
+asalariados_2025_t1 <- ocupados_siu %>%
+  filter(CAT_OCUP == 3) %>% # Ocupados asalariados
+  mutate(
+    descuento_jubil = case_when(PP07H == 1 ~ "Si",
+                                PP07H == 2 ~ "No"),
+    part.time.inv = case_when(PP3E_TOT < 35 & PP03G == 1 ~ "Si",
+                             TRUE ~ "No"),
+    tiempo.determinado = case_when(PP07C ==  1 ~ "Si",
+                                   TRUE ~ "No"))
+
+```
+
+Ya tenemos las tres variables construidas más arriba (`descuento_jubil`, `part.time.inv`,
+`tiempo.determinado`), pero están guardadas como texto ("Si" / "No"). Para un índice conviene
+pasarlas a **variables dummy**: valen 1 si el déficit está presente y 0 si no. Con `missing = 0` decidimos, explícitamente, tratar la no respuesta como "déficit ausente".
+
+```{r}
+asalariados_2025_t1_deficits<- asalariados_2025_t1 %>% 
+  mutate(
+    
+# 1 = el déficit está presente ; 0 = no lo está
+    d_registro = if_else(
+      descuento_jubil    == "No", 1, 0, missing = 0),
+    d_part_time  = if_else(part.time.inv      == "Si", 1, 0, missing = 0),
+    d_finalizacion = if_else(tiempo.determinado == "Si", 1, 0, missing = 0),
+    cantidad_deficits = d_registro + d_part_time + d_finalizacion
+    )
+           
+```
+
+Una vez que clasificamos a la población podemos hacer un resumen de la cantidad de personas que se ve afectada por
+
+```{r}
+asalariados_2025_t1_deficits %>% 
+  group_by(cantidad_deficits) %>% 
+  summarise(Poblacion = sum(PONDERA))
+```
+
+
+
+##  Índice de déficit de calidad del empleo
+
+Hasta acá contamos **deficits** sueltos. Un índice va un paso más allá: convierte esa cuenta en una **clasificación**. Asignemos cateogrías "Sin Déficit", "Déficit simple", "Déficit Moderado" y "Déficit severo"  y miremos la distribución porcentual de los asalariados en estas categorías
+
+
+```{r}
+indice_deficit <- asalariados_2025_t1_deficits %>%
+  mutate(
+    deficit = factor(
+      case_when(cantidad_deficits == 0 ~ "Sin déficit",
+                cantidad_deficits == 1 ~ "Déficit simple",
+                cantidad_deficits == 2 ~ "Déficit moderado",
+                cantidad_deficits == 3 ~ "Déficit severo"),
+      levels = c("Sin déficit", "Déficit simple",
+                 "Déficit moderado", "Déficit severo")))
+
+# a) Distribución de la población asalariada según el índice
+distribucion_deficit <- indice_deficit %>%
+  group_by(deficit) %>%
+  summarise(casos     = n(),
+            poblacion = sum(PONDERA),
+            .groups   = "drop") %>%
+  mutate(porcentaje = round(poblacion / sum(poblacion) * 100, 1))
+
+distribucion_deficit
+```
+
+¿Cómo da el índice entre varones y mujeres?
+```{r}
+calculate_tabulates(base = indice_deficit,                    x = "deficit",y = "CH04",
+                    weights = "PONDERA",
+                    add.percentage = "col")
+```
+
+## Indice Ponderado
+
+El índice que acabamos de construir hace un supuesto fuerte y no del todo evidente: que los tres
+déficits **valen lo mismo**. Un asalariado sin descuentos jubilatorios —fuera de la seguridad
+social, sin aportes, sin cobertura ante despido ni accidentes— cuenta igual que uno con contrato
+a plazo fijo pero plenamente registrado.
+
+Podemos discutir ese supuesto y reemplazarlo por otro: asignarle a cada déficit un **peso** distinto según su gravedad.
+
+| Déficit | Peso | Por qué |
+|---|---|---|
+| Sin descuentos jubilatorios | **3** | Proxy de no registro. Excluye del sistema de seguridad social; aguinaldo, derechos laborales, etc. Es el déficit más abarcativo |
+| Empleo por tiempo determinado | **2** | Supone falta de estabilidad (aún cuando pueda estar registrado) |
+| Part-time involuntario | **1** | Deseo de trabajar más horas refleja potencialmente insuficiencia de ingresos |
+
+El puntaje pasa a ir de **0 a 6** en lugar de 0 a 3, y hay que definir dónde cortar:
+
+```{r}
+indice_ponderado <- indice_deficit %>%
+  mutate(
+    puntaje = 3 * d_registro + 2 * d_finalizacion + 1 * d_part_time,
+    # El índice ponderado: cada déficit entra multiplicado por su peso
+
+    deficit_ponderado = factor(
+      case_when(puntaje == 0        ~ "Sin déficit",
+                puntaje %in% c(1,2) ~ "Déficit simple",
+                puntaje %in% c(3,4) ~ "Déficit moderado",
+                puntaje >= 5        ~ "Déficit severo"),
+      levels = c("Sin déficit", "Déficit simple",
+                 "Déficit moderado", "Déficit severo")))
+
+indice_ponderado %>%
+  group_by(deficit_ponderado) %>%
+  summarise(poblacion = sum(PONDERA), .groups = "drop") %>%
+  mutate(porcentaje = round(poblacion / sum(poblacion) * 100, 1))
+```
+
+::: {.callout-note appearance="simple"}
+## Ponderaciones
+
+Con pesos 3-2-1, cada combinación de déficits da un puntaje único.
+
+| Situación | Puntaje | Categoría |
+|---|---|---|
+| Ninguno | 0 | Sin déficit |
+| Solo part-time involuntario | 1 | Simple |
+| Solo tiempo determinado | 2 | Simple |
+| Tiempo determinado + part-time | 3 | Moderado |
+| **Solo sin registrar** | **3** | **Moderado** |
+| Sin registrar + part-time | 4 | Moderado |
+| Sin registrar + tiempo determinado | 5 | Severo |
+| Los tres | 6 | Severo |
+
+:::

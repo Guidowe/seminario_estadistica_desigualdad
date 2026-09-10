@@ -1,0 +1,45 @@
+project:
+  type: default
+  # Solo renderizamos las clases: evita que Quarto intente compilar
+  # las carpetas viejas (Practica 1 a 4) y los archivos de prueba.
+  render:
+    - clases/**/*.qmd
+  # CLAVE PARA LA REPRODUCIBILIDAD:
+  # el directorio de trabajo de todos los chunks es la RAIZ del proyecto.
+  # Asi, "bases_eph/usu_individual_T125.txt" funciona igual dentro del .qmd
+  # que dentro del script .R que se genera a partir de el.
+  execute-dir: project
+
+format:
+  html:
+    embed-resources: true
+    code-copy: true
+    code-tools: false
+    toc: true
+    toc-location: left
+    toc-title: Indice
+    theme:
+      light: assets/practica_claro.scss
+      dark: assets/practica_oscuro.scss
+    fig-width: 8
+    fig-height: 5
+    fig-format: retina
+
+execute:
+  freeze: auto
+  warning: false
+  message: false
+  echo: true
+
+editor: source
+
+author-title: "DOCENTES:"
+authors:
+  - name: Santiago Poy
+  - name: Guido Weksler
+
+subtitle: "Seminario Estadistica y programacion para estudios del trabajo, desigualdad y pobreza"
+
+include-after-body:
+  - assets/footer.html
+  - assets/toc-toggle.html

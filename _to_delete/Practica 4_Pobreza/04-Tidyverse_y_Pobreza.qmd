@@ -1,0 +1,227 @@
+---
+title: "Practica 4 - Pobreza"
+subtitle: "Seminario Estadística y programación para estudios del trabajo, desigualdad y pobreza"
+author-title: "DOCENTES:" 
+authors:
+  - name: Guido Weksler
+  - name: Santiago Poy
+output-file: "Practica 4 - Pobreza" 
+format:
+  html:
+    embed-resources: true
+    code-tools: false
+    code-copy: false
+    toc: true
+    toc-location: left
+    theme: 
+      light: ../assets/practica_claro.scss
+      dark:  ../assets/practica_oscuro.scss
+    fig-width: 8
+    fig-height: 5
+    fig-format: retina
+    warning: false
+    message: false
+    echo: true
+execute:
+  freeze: auto
+editor: source
+include-after-body: 
+  - ../assets/footer.html
+  - ../assets/toc-toggle.html
+---
+
+# Cálculo de Pobreza por Línea
+
+En esta clase abordaremos conceptos teóricos y definiciones metodológicas de la medición "indirecta" de la pobreza, a través del metodo usualmente conococido como "Porbreza por Línea", acorde a la [Metodología n° 22 de INDEC](https://www.indec.gob.ar/ftp/cuadros/sociedad/EPH_metodologia_22_pobreza.pdf]).  
+Luego, procederemos a realizar una estimación de la incidencia de la pobreza e indigencia por personas.
+
+Conceptos a abordar:  
+  
+  - Medición indirecta de la satisfacción de necesidades básicas
+  - Umbral de necesidades energéticas y proteicas
+  - Unidades de Adulto Equivalente
+  - Composición de la canasta básica alimentaria (Diferenciación regional)
+  - Población de Referencia
+  - Coeficiente de Engel
+  - Canasta Básica Total
+  - Pobreza como fenómeno del hogar
+  - Ingreso total familiar
+  
+
+Cargamos las librerías necesarias para realizar este ejercicio
+```{r warning = FALSE}
+library(tidyverse, warn = FALSE)
+library(openxlsx, warn = FALSE)
+```
+
+Aprovechando la facilidad que presenta el R para trabajar con multiples bases de datos, realizaremos la estimación de la incidencia para 2 trimestres consecutivos. Previo a levantar las bases, definimos un vector que contiene las variables relevantes para el ejercicio. Luego a la hora de levantar aplicamos un **select** al *dataframe** para conservar solo estas variables. Finalmente, para realizar la estimación conjunta de los dos trimestres, unimos ambas bases de datos
+
+```{r,warning=FALSE}
+var_interes <- c('CODUSU','NRO_HOGAR' ,'COMPONENTE','ANO4','TRIMESTRE','REGION',"P47T",
+             'AGLOMERADO', 'PONDERA', 'CH04', 'CH06', 'ITF', 'PONDIH','P21')
+
+individual_25_t1 <-
+  read.table("../bases_eph/usu_individual_T125.txt",
+  sep = ";",
+  dec = ",",
+  header = TRUE,
+  fill = TRUE )
+
+individual_25_t2 <-
+  read.table("../bases_eph/usu_individual_T225.txt",
+  sep = ";",
+  dec = ",",
+  header = TRUE,
+  fill = TRUE )
+
+bases_25 <- bind_rows(
+  individual_25_t1 %>% select(all_of(var_interes)),
+  individual_25_t2 %>% select(all_of(var_interes)))
+```
+
+
+A su vez levantaremos las siguientes fuentes secundarias:         
+
+ -  Unidades de Adulto equivalente según sexo y edad 
+ -  Canasta Básica Alimentaria Regionales de cada una de las regiones 
+ -  Canasta Básica Total Regionales de cada una de las regiones 
+ -  Diccionario de códigos de regiones y aglomerados de EPH         
+ 
+La información de estos cuadros fue extraída del [comunicado de pobreza](http://www.indec.gob.ar/uploads/informesdeprensa/eph_pobreza_02_16.pdf).
+
+```{r}
+
+adequi <- read.xlsx("../bases_eph/ADEQUI.xlsx")
+CBA    <- read.xlsx("../bases_eph/canastas_eph.xlsx",sheet = "CBA")
+CBT    <- read.xlsx("../bases_eph/canastas_eph.xlsx",sheet = "CBT")
+dic.regiones <- read.xlsx("../bases_eph/Aglomerados y Regiones EPH.xlsx",
+                          sheet = "Regiones EPH", 
+                          startRow = 2)
+
+
+```
+
+## Canastas Trimestrales por Region
+Dado que en las bases de microdatos de EPH no se publica el mes correspondiente a cada uno de los registros individuales, las estimación de pobreza que pueden realizar los usuarios necesariamente debe ser a partir de **canastas trimestrales**.
+
+Para ello, a partir de los datos mensuales de la Canasta Básica Alimentaria y Total publicados por INDEC, calculamos un valor trimestral de ambas canastas, para un Adulto Equivalente perteneciente a cada una de las regiones. A vez, necesitaremos una tabla que pueda _unirse_ con la base de datos de la EPH para asignar a cada registro, su canasta correspondiente (acorde al trimestre y a la región). 
+
+```{r}
+CBA <- CBA %>% 
+  mutate(Canasta = 'CBA')
+
+CBT <- CBT %>% 
+  mutate(Canasta = 'CBT')
+
+Canastas_Reg <- bind_rows(CBA,CBT)                       %>% 
+  pivot_longer(cols = 3:8,names_to = "Region", values_to = "Valor")             %>%
+  mutate(Trimestre = case_when(Mes %in% c(1:3)   ~1,
+                               Mes %in% c(4:6)   ~2,
+                               Mes %in% c(7:9)   ~3,
+                               Mes %in% c(10:12) ~4),
+         Periodo = paste(Anio, Trimestre, sep='.'))      
+Canastas_Reg[1:10,]
+```
+Habiendo agregado el identificador del período, promediamos las canastas de un mismo trimestre y luego le agregamos el código de la region correspondiente que nos permitirá unir este **Dataframe** con la base de microdatos de la EPH
+```{r}
+Canastas_Reg_2 <- Canastas_Reg %>% 
+  group_by(Canasta, Region, Periodo)                     %>% 
+  summarise(Valor = mean(Valor))                         %>% 
+  spread(., Canasta,Valor)                               %>% 
+  left_join(., dic.regiones, by = "Region")              %>% 
+  ungroup()                                              
+Canastas_Reg_2
+```
+
+
+## Unidades de Adulto Equivalente por hogar en la base Individual
+
+1. Incorporamos a cada registro de nuestra base la Unidad de Adulto Equivalente (UAE) correspondiente, matcheando las columnas de Edad (CH06) y Sexo (CH04) mediante la función __left_join__.            
+
+```{r, warning=FALSE}
+Pobreza_Individual <- bases_25 %>% 
+  mutate(Periodo = paste(ANO4, TRIMESTRE, sep='.')) %>% 
+  left_join(., adequi, by = c("CH04", "CH06")) %>% 
+  left_join(., Canastas_Reg_2, by = c("REGION", "Periodo"))    
+
+
+Pobreza_Individual[1:10,1:10]
+```
+
+2. Utilizamos la función __group_by__ para calcular el total de UAE por hogar. Notesé que al usar la función __mutate__ creamos una nueva columna, permitiendo conservar la dimensión individual de la base.              
+```{r, warning=FALSE}
+Pobreza_Individual_paso2 <- Pobreza_Individual %>%  
+  group_by(CODUSU, NRO_HOGAR, Periodo)                          %>% 
+  mutate(Adequi_hogar = sum(adequi))                            %>%
+  ungroup()                                                      
+Pobreza_Individual_paso2[1:10,1:10]
+```
+
+3. En base a las UAE del hogar al que pertenece cada individuo calculamos el valor de las canastas que delimitan las lineas de pobreza e indigencia correspondientes. 
+4. Realizamos la comparación lógica entre el Ingreso Total Familiar y las Canastas calculadas para asignar a cada individuo su "situación" mediante la función __case_when__.  
+```{r, warning=FALSE}
+Pobreza_Individual_paso3 <-  Pobreza_Individual_paso2 %>% 
+ mutate(CBA = CBA*Adequi_hogar,
+        CBT = CBT*Adequi_hogar,
+        Situacion = case_when(ITF<CBA            ~ 'Indigente',
+                               ITF>=CBA & ITF<CBT ~ 'Pobre',
+                               ITF>=CBT           ~ 'No.Pobre'))  
+
+Pobreza_Individual_paso3[1:10,1:10]
+```
+## Cálculo de Tasas de Pobreza e Indigencia
+Habiendo identificado a cada persona como **pobre, indigente o no pobre** el paso final para calcular la incidencia de la pobreza e indigencia requiere realizar un conteo de estos casos (Para lo cual se requiere sumar los ponderadores (**PONDIH**) de los registros que cumplen con una u otroa condición)
+
+```{r}
+Pobreza_resumen <- Pobreza_Individual_paso3 %>% 
+  group_by(Periodo) %>% 
+  summarise(Tasa_pobreza    = sum(PONDIH[Situacion %in% c('Pobre', 'Indigente')],na.rm = TRUE)/
+                              sum(PONDIH,na.rm = TRUE),
+            
+            Tasa_indigencia = sum(PONDIH[Situacion == 'Indigente'],na.rm = TRUE)/
+                              sum(PONDIH,na.rm = TRUE)) 
+Pobreza_resumen
+```
+
+En caso de querer calcular la pobreza para otros subgrupos poblacionales, simplemente se requiere replicar el cálculo con la tabla agrupada según la variable de interés
+
+```{r}
+Pobreza_resumen_region <- Pobreza_Individual_paso3 %>% 
+  group_by(Periodo,Region) %>% 
+  summarise(Tasa_pobreza    = sum(PONDIH[Situacion %in% c('Pobre', 'Indigente')],na.rm = TRUE)/
+                              sum(PONDIH,na.rm = TRUE),
+            
+            Tasa_indigencia = sum(PONDIH[Situacion == 'Indigente'],na.rm = TRUE)/
+                              sum(PONDIH,na.rm = TRUE)) 
+Pobreza_resumen_region
+```
+
+## Paquete EPH
+
+```{r}
+lineas_pobreza <- eph::get_poverty_lines(regional = T)
+
+adulto_equivalente<- eph::adulto_equivalente
+
+base_con_identificador <- eph::calculate_poverty(
+  base = bases_25,
+  basket = lineas_pobreza,
+  print_summary = T,
+  window = "semester")
+
+base_para_inspeccionar <- base_con_identificador %>% 
+  select(CODUSU,NRO_HOGAR,COMPONENTE,ITF,adequi_hogar,CBT_hogar,CBA_hogar,region,situacion)
+
+head(base_para_inspeccionar)
+```
+
+
+## Ejercicios Para prácticar
+ - Calcular el % de pobreza e indigencia para mujeres y varones (1 y 2do trimestre 2025)
+ - Calcular el % de **hogares** bajo la linea de pobreza e indigencia, a nivel nacional y abierto por regiones (1 y 2do trimestre 2025)
+
+ 
+## Ejercicios de tarea
+ - Calcular el % de pobreza e indigencia para mujeres y varones en cada una de las regiones(1 y 2do trimestre 2025)
+
+

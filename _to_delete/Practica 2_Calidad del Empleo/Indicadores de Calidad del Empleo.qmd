@@ -1,0 +1,209 @@
+---
+title: "Práctica Calidad del Empleo"
+subtitle: "Seminario Estadística y programación para estudios del trabajo, desigualdad y pobreza"
+author-title: "DOCENTES:" 
+authors:
+  - name: Santiago Poy
+  - name: Guido Weksler
+output-file: "Practica 2 - Calidad del empleo" 
+format:
+  html:
+    embed-resources: true
+    code-tools: false
+    code-copy: false
+    toc: true
+    toc-location: left
+    toc-title: Índice
+    theme:
+      light: ../assets/practica_claro.scss
+      dark: ../assets/practica_oscuro.scss
+    fig-width: 8
+    fig-height: 5
+    fig-format: retina
+    warning: false
+    message: false
+    echo: true
+execute:
+  freeze: auto
+editor: source
+knitr: 
+  opts_chunk: 
+    dev: [svglite, darksvglite]
+    fig.ext: [.light.png, .dark.png]
+include-after-body: 
+  - ../assets/footer.html
+  - ../assets/toc-toggle.html
+---
+
+# Introducción 
+
+## Presentación de la clase
+
+Esta clase está destinada a profundizar los conocimientos del paquete **tidyverse** mediante ejercicios vinculados al análisis de la calidad del empleo. Luego de esta sección introductoria, el encuentro se organizará en 3 ejercicios: 
+
+-   El primer ejercicio consistirá en el armado de indicadores de calidad del empleo, cruzados con otras variables de la base individual. Se utilizará el paquete [**eph**](https://ropensci.github.io/eph/) para el armado de tabulados, cruzados con otras variables de la base individual.
+
+
+## Estimaciones sobre precariedad e informalidad laboral 
+
+Cuando trabajamos con estadísticas laborales, muchas veces queremos encontrar la expresión empírica de ideas, categorías o conceptos en las características de la población estudiada. Al proceso de ‘bajar’ esas ideas a mediciones o indicadores se lo llama operacionalización. Como las encuestas de hogares muchas veces no tienen el mismo diseño, es nuestra tarea elegir qué preguntas/variables vamos a tomar en consideración.
+
+A lo largo de esta clase vamos a trabajar con dos conceptos muy utilizados en los estudios laborales: la precariedad y la informalidad. Muy sintéticamente hablando, la **precariedad laboral** son situaciones de empleo endeble que implican una inseguridad o riesgo para la persona que trabaja. La forma de medir la incidencia de los empleos precarios se basa en clasificar a las personas ocupadas según si su relación laboral se aleja o no del ‘tipo ideal’ de empleo protegido (con contrato legal, por tiempo indeterminado, tiempo completo, con seguridad social, seguro médico, vacaciones pagas, etc.). En Argentina, por ejemplo, la precariedad se suele medir según la falta de contribuciones al sistema previsional.
+
+Por su parte, el **sector informal** hace referencia a una característica típica de los mercados de trabajo latinoamericanos, donde es muy extendido el empleo en actividades simples, en establecimientos pequeños y de muy baja productividad. Según la definición ‘clásica’ del Sector Informal Urbano del PREALC-OIT, el sector informal son actividades con poco capital, baja escala y baja tecnología, generalmente realizadas en unidades productivas unipersonales. Cuando existe la contratación de mano de obra, ésta generalmente se basa en relaciones familiares o personales, ya que la relación asalariada no se encuentra plenamente extendida en este sector. 
+Pero ahora ¿Cómo se operacionaliza esto? Hay muchos criterios y formas de medir la informalidad. Este es un ejemplo de criterios para clasificar a una persona como integrante del Sector Informal:
+
+-Asalariado/a en establecimientos de hasta 5 personas
+
+-Cuentapropistas no profesionales (con ocupación de baja calificación)
+
+-Trabajador/a familiar sin salario
+
+-Patrones no profesionales en establecimientos de hasta 5 personas
+
+
+# Ejercicio 1 - Indicadores de Calidad del Empleo en la EPH
+
+Antes de empezar con los ejercicios, cargamos los paquetes en nuestro entonrno de trabajo.
+
+```{r, warning=FALSE,message=FALSE}
+library(tidyverse)
+library(openxlsx)
+library(eph)
+```
+
+## Levantamos la base de microdatos 
+
+```{r}
+individual_25_t1 <-
+  read.table("../bases_eph/usu_individual_T125.txt",
+  sep = ";",
+  dec = ",",
+  header = TRUE,
+  fill = TRUE )
+```
+
+## Alternativa (Paquete EPH)    
+
+El paquete [eph](https://ropensci.github.io/eph/) tiene por objecto facilitar el trabajo de usuaries de la Encuesta Permanente de Hogares. El mismo incluye funciones para facilitar la descarga e importación de las bases de datos, etiquetado automático de las variables, clasificación de las variables de ocupación y ramas de actividad, entre otras.
+
+Con la función **get_microdata()**, pueden rapidamente descargar e importar una base de datos que está alojada en un repositorio de Github. Incluso, podemos especificar con el parametro **vars**  únicamente las variables que nos interesan conservar de la base.
+
+```{r}
+#| eval: false
+#| include: True
+
+variables <- c("CODUSU","NRO_HOGAR","COMPONENTE","ANO4","TRIMESTRE",                "AGLOMERADO","CH03","CH04","CH06","ESTADO","CAT_OCUP","CAT_INAC","PP04A",                "PP04B_COD","PP07H","P21","P47T","PONDERA","PP04D_COD","PP04C",                "PP07A","PP07C","PP05B2_ANO","PP04B3_ANO","PP07E","NIVEL_ED","PONDIIO","PP04C","PP03G","PP3E_TOT") 
+
+probar <- eph::get_microdata(year = 2025,period = 1,type = "individual",vars = "all")
+
+```
+
+
+## Creando categorías para el análisis de la calidad del empleo
+
+Un primer paso típico a la hora de procesar la encuesta es crear un nuevo objeto nuevo en el cual (luego de aplicar los filtros de interés) añadiremos variables que conforman nuestras categorías de análisis.
+
+En este caso, aplicaremos un filtro para conservar únicamente a la población ocupada asalariada. Luego, crearemos variables que identifiquen a la población según:
+
+-   Máximo nivel educativo alcanzado\
+-   Tamaño de establecimiento\
+-   Percepción de descuento jubilatorio\
+-   Trabajo a tiempo parcial o completo\
+-   Trabajo con duración establecida
+
+```{r}
+asalariados_2025_t1 <- individual_25_t1 %>%
+  filter(ESTADO == 1, CAT_OCUP == 3) %>% # Ocupados asalariados
+  mutate(
+    nivel.ed = factor(
+      case_when(NIVEL_ED %in% c(7,1,2,3) ~ "Menor a Secundaria",
+                NIVEL_ED %in% c(4,5) ~ "Secundaria Completa",
+                NIVEL_ED == 6 ~ "Superior Completo",
+                TRUE ~ "Ns/Nr"),
+      levels = c("Menor a Secundaria","Secundaria Completa","Superior Completo")),
+    tamanio.establec = factor(
+      case_when(PP04C %in% 1:6  ~ "Pequeño",
+                PP04C %in% 7:8  ~ "Mediano",
+                PP04C %in% 9:12 ~ "Grande",
+                PP04C %in% 99   ~ "Ns/Nr"),
+      levels = c("Pequeño","Mediano","Grande","Ns/Nr")),
+    descuento_jubil = case_when(PP07H == 1 ~ "Si",
+                                PP07H == 2 ~ "No"),
+    part.time.inv = case_when(PP3E_TOT < 35 & PP03G == 1 ~ "Si",
+                             TRUE ~ "No"),
+    tiempo.determinado = case_when(PP07C ==  1 ~ "Si",
+                                   TRUE ~ "No"))
+
+```
+
+De manera muy sencilla, la función **calculate_tabulates** del paquete EPH nos parmite rápidamente obtener tabulados univariados y bivariados de nuestras categorías de interés.
+
+```{r}
+calculate_tabulates(base = asalariados_2025_t1,
+                         x = "descuento_jubil",
+                         weights = "PONDERA")
+```
+
+Si queremos ver el cruce por grupos de nivel educativo...
+
+```{r}
+calculate_tabulates(base = asalariados_2025_t1,
+                         x = "descuento_jubil",
+                         y = "nivel.ed",
+                         add.totals = "both",
+                         weights = "PONDERA")
+```
+
+El parámetro `add.percentage` nos permite calcular los porcentajes, según filas `(add.percentage = "row")` o columnas `(add.percentage = "col")`.\
+En este caso, si nos interesa ver la tasa de informalidad (típicamnete calculada según la percepción de descuentos jubilatorios) por nivel educativo, debemos calcular los porcentajes a nivel de columnas. Como es esperable, a mayor nivel educativo es mayor el porcentaje de lxs asalariadxs que percibe descuentos jubilatorios
+
+```{r}
+calculate_tabulates(base = asalariados_2025_t1,
+                         x = "descuento_jubil",
+                         y = "nivel.ed",
+                         add.percentage = "col", 
+                         weights = "PONDERA")
+```
+
+## Consignas
+
+
+> Consigna 1 ¿Como calcularíamos la proporción de asalariados con trabajos de duración determinada en cada uno de los grupos de tamaño de establecimiento?
+
+```{r}
+#Consigna 1
+```
+
+## Co-ocurrencia de fenomenos
+
+Consideremos las siguiente tres variables como expresiones que hacen a la precariedad laboral entre los asalariados:\
+- la falta de descuentos jubilatorios\
+- El empleo de jornada part-time involuntario\
+- El empleo por tiempo determinado
+
+```{r}
+asalariados_2025_t1_signos<- asalariados_2025_t1 %>% 
+  mutate(signos.precariedad = ifelse(descuento_jubil == "No",yes = 1,no = 0)+
+                              ifelse(part.time.inv == "Si",yes = 1,no = 0)+
+                              ifelse(tiempo.determinado == "Si",yes = 1,no = 0))
+           
+```
+
+Una vez que clasificamos a la población podemos hacer un resumen de la cantidad de personas que se ve afectada por
+
+```{r}
+asalariados_2025_t1_signos %>% 
+  group_by(signos.precariedad) %>% 
+  summarise(Poblacion = sum(PONDERA))
+```
+
+> Consigna 2. Calcular la proporción de asalariados con al menos un signo de mala calidad del empleo 
+
+```{r}
+#Consigna 2
+```
+
+```{r}
+```
+
