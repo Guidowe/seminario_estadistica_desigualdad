@@ -406,13 +406,6 @@ individuos o familias) requiere tener en cuenta dos aspectos importantes:
 - Necesitamos utilizar una función que permita incorporar **ponderadores** al armado de los
   percentiles. Utilizaremos el paquete [statar](https://github.com/matthieugomez/statar).
 
-::: {.callout-note appearance="simple"}
-## `statar` no viene con el `00_setup.R`
-
-Si es la primera vez que lo usan, corran una sola vez `install.packages("statar")` antes de seguir.
-No hace falta cargarlo con `library()`: lo vamos a llamar con la notación `statar::xtile()`, que
-usa la función sin cargar todo el paquete al entorno.
-:::
 
 ### Funciones para perturbar una variable
 

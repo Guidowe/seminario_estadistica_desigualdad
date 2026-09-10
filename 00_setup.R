@@ -66,7 +66,8 @@ paquetes <- c(
   "GGally",      # matrices de correlacion y graficos combinados
 
   # -- Especificos del seminario
-  "eph"          # funciones para trabajar con la EPH (INDEC)
+  "eph",          # funciones para trabajar con la EPH (INDEC)
+  "statar"       # funciones útiles de stata (Ej: constuir percentiles)
 )
 
 faltantes <- paquetes[!paquetes %in% rownames(installed.packages())]
