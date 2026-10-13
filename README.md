@@ -90,10 +90,10 @@ seminario/
 │   ├── 01_intro_r/
 │   ├── 02_eph_ponderadores/
 │   ├── 03_tabulados_resumen/
-│   ├── 04_taller_tabulados/
-│   ├── 05_calidad_empleo/
-│   ├── 06_distribucion_ingresos/
-│   ├── 07_pobreza/
+│   ├── 04_calidad_empleo/
+│   ├── 05_distribucion_ingresos/
+│   ├── 06_pobreza/
+│   ├── 07_pobreza_parte2/
 │   └── 08_taller_trabajo_final/
 └── _docente/                ← fuentes y scripts de armado (no hace falta tocar)
 ```
@@ -106,11 +106,11 @@ seminario/
 |---|---|---|
 | 1 | 08/10 | Introducción a la programación en R. Importación de bases, renombrado y creación de variables |
 | 2 | 15/10 | La EPH: diseño de registro, uso de ponderadores y tratamiento de datos faltantes |
-| 3 | 22/10 | Tabulados y medidas de resumen. Flujo de trabajo y exportación de resultados |
-| 4 | 29/10 | Taller de tabulados: análisis bivariado y medidas de asociación (Chi², V de Cramer) |
-| 5 | 05/11 | Informalidad y calidad del empleo: construcción de variables complejas e índices |
-| 6 | 12/11 | Distribución del ingreso: agregación (ITF), medidas de ingreso y visualización |
-| 7 | 19/11 | Pobreza: joins con canastas y tablas de equivalencias, hogares repetidos |
+| 3 | 22/10 | Tabulados, medidas de resumen y asociación bivariada (Chi², V de Cramer). Exportación de resultados |
+| 4 | 29/10 | Informalidad y calidad del empleo: construcción de variables complejas e índices |
+| 5 | 05/11 | Distribución del ingreso: agregación (ITF), medidas de ingreso y visualización |
+| 6 | 12/11 | Pobreza: joins con canastas y tablas de equivalencias, hogares repetidos |
+| 7 | 19/11 | Pobreza (parte 2) |
 | 8 | 26/11 | Taller de trabajo final |
 
 ---

@@ -1,6 +1,6 @@
 # =============================================================================
-# CLASE 04 -- EJERCICIOS
-# Taller de tabulados y medidas de asociación
+# CLASE 06 -- EJERCICIOS
+# Medición de la pobreza por ingresos
 #
 # ANTES DE EMPEZAR:
 #   Abri el proyecto con doble clic en "seminario.Rproj".

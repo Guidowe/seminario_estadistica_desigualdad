@@ -1,6 +1,6 @@
 # =============================================================================
-# CLASE 06 -- EJERCICIOS
-# Distribución del ingreso y visualización
+# CLASE 04 -- EJERCICIOS
+# Informalidad y calidad del empleo
 #
 # ANTES DE EMPEZAR:
 #   Abri el proyecto con doble clic en "seminario.Rproj".

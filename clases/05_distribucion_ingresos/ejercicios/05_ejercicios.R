@@ -1,6 +1,6 @@
 # =============================================================================
-# CLASE 07 -- EJERCICIOS
-# Medición de la pobreza por ingresos
+# CLASE 05 -- EJERCICIOS
+# Distribución del ingreso y visualización
 #
 # ANTES DE EMPEZAR:
 #   Abri el proyecto con doble clic en "seminario.Rproj".

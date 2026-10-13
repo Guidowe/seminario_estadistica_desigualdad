@@ -125,8 +125,8 @@
 
   <!-- ===================== 1. PROYECTO ===================== -->
   <section>
-    <h2>1. Antes de la primera clase</h2>
-    <p class="intro">Se descarga una sola vez. Trae la carpeta del proyecto de R con todas las bases de la EPH que vamos a usar durante el seminario.</p>
+    <h2>1. Materiales generales</h2>
+    <p class="intro">Descargar una sola vez antes de la primera clase. Trae la carpeta del proyecto de R, las bases de la EPH y otros archivos que vamos a usar durante el seminario.</p>
 
     <div class="card destacada">
       <div>
@@ -142,22 +142,22 @@
 
   <!-- ===================== 2. CLASES ===================== -->
   <section>
-    <h2>2. Materiales de cada clase</h2>
-    <p class="intro">Cada clase trae la guía para leer (<code>.html</code>), el script para correr en RStudio (<code>.R</code>) y la consigna de ejercicios. Se habilitan a medida que avanza el seminario.</p>
+    <h2>2. Materiales por clase</h2>
+    <p class="intro">Aquí encontraran una nota de clase (<code>.html</code>), el script para correr en RStudio (<code>.R</code>) y consignas con ejercicios de práctica. </p>
 
     <ul class="clases" id="lista-clases"></ul>
   </section>
 
   <!-- ===================== 3. CÓMO EMPEZAR ===================== -->
   <section>
-    <h2>3. Cómo empezar</h2>
+    <h2>3. Cómo organizar los archivos</h2>
     <p class="intro">Si todavía no instalaste R y RStudio, hacelo primero: <a href="https://cran.r-project.org/" target="_blank" rel="noopener">R</a> y después <a href="https://posit.co/download/rstudio-desktop/" target="_blank" rel="noopener">RStudio Desktop</a>, en ese orden.</p>
 
     <ol class="pasos">
       <li><strong>Descomprimí el proyecto</strong> en un lugar fácil de encontrar, por ejemplo <code>Documentos</code>. Clic derecho sobre el ZIP → <em>Extraer todo</em>. Te queda una carpeta <code>seminario</code>.</li>
       <li><strong>Abrí el proyecto</strong> con doble clic en <code>seminario.Rproj</code>. RStudio se abre ya ubicado en la carpeta correcta.</li>
       <li><strong>Corré la puesta a punto:</strong> abrí <code>00_setup.R</code> desde la pestaña <em>Files</em> y apretá <strong>Source</strong>. La primera vez tarda unos minutos porque instala los paquetes.</li>
-      <li><strong>En cada clase,</strong> descargá su ZIP y descomprimilo dentro de <code>seminario/clases</code>.</li>
+      <li><strong>Para cada clase,</strong> descargá su ZIP y descomprimilo dentro de <code>seminario/clases</code>. Debería quedarte esta estructura de carpetas: </li>
     </ol>
 
 <pre class="arbol"><code>seminario/
@@ -189,14 +189,14 @@
      indicado en "archivo" y cambiar  disponible: false  por  true.
      ===================================================================== */
   const CLASES = [
-    { n: 1, fecha: "08/10", titulo: "Introducción a la programación en R",                  archivo: "clase_01.zip", disponible: true  },
-    { n: 2, fecha: "15/10", titulo: "La EPH: diseño de registro, ponderadores y datos faltantes", archivo: "clase_02.zip", disponible: false },
-    { n: 3, fecha: "22/10", titulo: "Tabulados y medidas de resumen",                       archivo: "clase_03.zip", disponible: false },
-    { n: 4, fecha: "29/10", titulo: "Taller de tabulados y medidas de asociación",          archivo: "clase_04.zip", disponible: false },
-    { n: 5, fecha: "05/11", titulo: "Informalidad y calidad del empleo",                    archivo: "clase_05.zip", disponible: false },
-    { n: 6, fecha: "12/11", titulo: "Distribución del ingreso y visualización",             archivo: "clase_06.zip", disponible: false },
-    { n: 7, fecha: "19/11", titulo: "Medición de la pobreza por ingresos",                  archivo: "clase_07.zip", disponible: false },
-    { n: 8, fecha: "26/11", titulo: "Taller de trabajo final",                              archivo: "clase_08.zip", disponible: false },
+    { n: 1, fecha: "08/10", titulo: "Introducción a la programación en R",              archivo: "clase_01.zip", disponible: true  },
+    { n: 2, fecha: "15/10", titulo: "EPH e introducción a Tidyverse",                    archivo: "clase_02.zip", disponible: true },
+    { n: 3, fecha: "22/10", titulo: "Tabulados, medidas de resumen y asociación bivariada", archivo: "clase_03.zip", disponible: false },
+    { n: 4, fecha: "29/10", titulo: "Informalidad y calidad del empleo",                archivo: "clase_04.zip", disponible: false },
+    { n: 5, fecha: "05/11", titulo: "Distribución del ingreso y visualización",         archivo: "clase_05.zip", disponible: false },
+    { n: 6, fecha: "12/11", titulo: "Medición de la pobreza por ingresos",              archivo: "clase_06.zip", disponible: false },
+    { n: 7, fecha: "19/11", titulo: "Medición de la pobreza por ingresos (parte 2)",    archivo: "clase_07.zip", disponible: false },
+    { n: 8, fecha: "26/11", titulo: "Taller de trabajo final",                          archivo: "clase_08.zip", disponible: false },
   ];
 
   const icono = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>';

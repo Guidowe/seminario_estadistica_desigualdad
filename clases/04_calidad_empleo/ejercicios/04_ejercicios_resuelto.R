@@ -1,6 +1,6 @@
 # =============================================================================
 # CLASE 04 -- EJERCICIOS RESUELTOS
-# Taller de tabulados y medidas de asociación
+# Informalidad y calidad del empleo
 #
 # USO DOCENTE. No se entrega junto con la consigna: se libera despues de la
 # clase (ver la lista NO_ENTREGAR en _docente/armar_zip.R).

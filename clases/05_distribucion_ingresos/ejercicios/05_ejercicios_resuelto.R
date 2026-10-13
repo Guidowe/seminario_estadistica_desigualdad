@@ -1,6 +1,6 @@
 # =============================================================================
-# CLASE 07 -- EJERCICIOS RESUELTOS
-# Medición de la pobreza por ingresos
+# CLASE 05 -- EJERCICIOS RESUELTOS
+# Distribución del ingreso y visualización
 #
 # USO DOCENTE. No se entrega junto con la consigna: se libera despues de la
 # clase (ver la lista NO_ENTREGAR en _docente/armar_zip.R).
