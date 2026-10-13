@@ -95,7 +95,7 @@ seminario/
 │   ├── 06_pobreza/
 │   ├── 07_pobreza_parte2/
 │   └── 08_taller_trabajo_final/
-└── _docente/                ← fuentes y scripts de armado (no hace falta tocar)
+└── armar_descargas.R     ← arma los zip del sitio (uso docente)
 ```
 
 ---
@@ -118,12 +118,13 @@ seminario/
 ## Para el equipo docente
 
 Las fuentes de cada clase son los archivos `.qmd` (Quarto) que están en la
-carpeta de cada clase. El HTML y el script `.R` que reciben los estudiantes
-**no se escriben a mano**: se generan a partir del `.qmd`.
+carpeta de cada clase. El HTML se genera con `quarto render clases/NN_tema/NN_tema.qmd`.
+
+Los archivos que se bajan desde el sitio web se arman con `armar_descargas.R`:
 
 ```r
-source("_docente/build.R")   # renderiza los HTML y genera los .R
-source("_docente/armar_zip.R")  # arma el zip que se entrega
+source("armar_descargas.R")
+armar_zip_clase(2)                         # descargas/clase_02.zip + habilita el botón en index.html
+armar_zip_clase(2, con_soluciones = TRUE)  # incluye los _resuelto.R
+armar_zip_proyecto()                       # descargas/seminario.zip (Rproj, setup y bases)
 ```
-
-Ver `_docente/README_docente.md` para el detalle.
