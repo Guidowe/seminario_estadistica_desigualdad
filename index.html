@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seminario Estadística y Desigualdad</title>
+<meta name="description" content="Materiales de la parte práctica del seminario Estadística y programación para estudios del trabajo, desigualdad y pobreza (Doctorado en Ciencias Sociales, UBA).">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Roboto:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f8fa;
+    --surface: #ffffff;
+    --ink: #363636;
+    --muted: #5f6770;
+    --line: #dde3e9;
+    --accent: #0e6aa5;
+    --accent-dark: #0d395f;
+    --accent-ink: #ffffff;
+    --accent-soft: #e8f1f8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #13171c;
+      --surface: #1b2128;
+      --ink: #e6e9ec;
+      --muted: #a2abb5;
+      --line: #2e3742;
+      --accent: #5cb3e8;
+      --accent-dark: #aad6f2;
+      --accent-ink: #0d1a24;
+      --accent-soft: #1a2a38;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 17px/1.6 "Lato", system-ui, sans-serif;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 16px; }
+  h1, h2, h3 { font-family: "Roboto", system-ui, sans-serif; color: var(--accent-dark); }
+  a { color: var(--accent); }
+
+  header { background: var(--accent-dark); color: #fff; padding: 56px 0 44px; }
+  @media (prefers-color-scheme: dark) { header { background: #0c2235; } }
+  header h1 { color: #fff; font-size: clamp(26px, 4.6vw, 40px); line-height: 1.2; margin: 0 0 12px; }
+  header .eyebrow { margin: 0 0 10px; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; color: #aad6f2; font-weight: 700; }
+  header .meta { margin: 0; color: #d3e3ef; }
+
+  section { padding: 40px 0 8px; }
+  h2 { font-size: 26px; margin: 0 0 6px; }
+  section > p.intro { color: var(--muted); margin: 0 0 20px; max-width: 64ch; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+    padding: 18px 20px; display: flex; gap: 16px 24px; align-items: center;
+    justify-content: space-between; flex-wrap: wrap;
+  }
+  .card.destacada { border: 2px solid var(--accent); background: var(--accent-soft); padding: 24px; }
+  .card h3 { margin: 0 0 2px; font-size: 19px; }
+  .card p { margin: 0; color: var(--muted); font-size: 15px; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; background: var(--accent);
+    color: var(--accent-ink); text-decoration: none; font-weight: 700; font-size: 15px;
+    padding: 11px 18px; border-radius: 8px; white-space: nowrap;
+  }
+  .btn:hover { background: var(--accent-dark); color: var(--accent-ink); }
+  .btn:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+  .btn svg { width: 18px; height: 18px; flex: none; }
+  .btn.off { background: transparent; color: var(--muted); border: 1px dashed var(--line); font-weight: 400; }
+
+  .clases { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .clase { display: grid; grid-template-columns: 52px 1fr auto; gap: 4px 16px; align-items: center; }
+  .clase .num {
+    font-family: "Roboto", sans-serif; font-weight: 700; font-size: 22px; color: var(--accent);
+    width: 44px; height: 44px; border-radius: 50%; background: var(--accent-soft);
+    display: grid; place-items: center;
+  }
+  .clase .fecha { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .clase h3 { font-size: 17px; margin: 0; color: var(--ink); font-family: "Lato", sans-serif; font-weight: 700; }
+  .clase.pendiente .num { background: transparent; border: 1px solid var(--line); color: var(--muted); }
+  .clase.pendiente h3 { color: var(--muted); font-weight: 400; }
+  @media (max-width: 560px) {
+    .clase { grid-template-columns: 44px 1fr; }
+    .clase .btn { grid-column: 1 / -1; justify-content: center; }
+  }
+
+  ol.pasos { margin: 0; padding: 0; list-style: none; counter-reset: paso; display: grid; gap: 14px; }
+  ol.pasos li { counter-increment: paso; position: relative; padding-left: 44px; }
+  ol.pasos li::before {
+    content: counter(paso); position: absolute; left: 0; top: 0; width: 30px; height: 30px;
+    border-radius: 50%; background: var(--accent); color: var(--accent-ink);
+    font-weight: 700; display: grid; place-items: center; font-size: 15px;
+  }
+  .aviso {
+    margin-top: 22px; padding: 14px 18px; border-left: 4px solid #ff6700;
+    background: var(--surface); border-radius: 0 8px 8px 0; font-size: 15px;
+  }
+  code {
+    font-family: "Fira Code", ui-monospace, Consolas, monospace; font-size: .9em;
+    background: var(--surface); border: 1px solid var(--line); padding: 1px 6px; border-radius: 4px;
+  }
+  pre.arbol {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+    padding: 14px 16px; overflow-x: auto; font-size: 14px; line-height: 1.55; margin: 16px 0 0;
+  }
+  pre.arbol code { border: 0; background: none; padding: 0; font-size: 1em; }
+  footer { margin-top: 48px; padding: 28px 0 48px; border-top: 1px solid var(--line); color: var(--muted); font-size: 15px; }
+  footer p { margin: 4px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <p class="eyebrow">Doctorado en Ciencias Sociales · UBA</p>
+    <h1>Estadística y programación para estudios del trabajo, desigualdad y pobreza</h1>
+    <p class="meta">Materiales de la parte práctica · Santiago Poy y Guido Weksler</p>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ===================== 1. PROYECTO ===================== -->
+  <section>
+    <h2>1. Antes de la primera clase</h2>
+    <p class="intro">Se descarga una sola vez. Trae la carpeta del proyecto de R con todas las bases de la EPH que vamos a usar durante el seminario.</p>
+
+    <div class="card destacada">
+      <div>
+        <h3>Proyecto del seminario + bases de datos</h3>
+        <p><code>seminario.Rproj</code>, <code>00_setup.R</code> y la carpeta <code>bases_eph</code> · ZIP, 14 MB</p>
+      </div>
+      <a class="btn" href="descargas/seminario.zip" download>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+        Descargar proyecto
+      </a>
+    </div>
+  </section>
+
+  <!-- ===================== 2. CLASES ===================== -->
+  <section>
+    <h2>2. Materiales de cada clase</h2>
+    <p class="intro">Cada clase trae la guía para leer (<code>.html</code>), el script para correr en RStudio (<code>.R</code>) y la consigna de ejercicios. Se habilitan a medida que avanza el seminario.</p>
+
+    <ul class="clases" id="lista-clases"></ul>
+  </section>
+
+  <!-- ===================== 3. CÓMO EMPEZAR ===================== -->
+  <section>
+    <h2>3. Cómo empezar</h2>
+    <p class="intro">Si todavía no instalaste R y RStudio, hacelo primero: <a href="https://cran.r-project.org/" target="_blank" rel="noopener">R</a> y después <a href="https://posit.co/download/rstudio-desktop/" target="_blank" rel="noopener">RStudio Desktop</a>, en ese orden.</p>
+
+    <ol class="pasos">
+      <li><strong>Descomprimí el proyecto</strong> en un lugar fácil de encontrar, por ejemplo <code>Documentos</code>. Clic derecho sobre el ZIP → <em>Extraer todo</em>. Te queda una carpeta <code>seminario</code>.</li>
+      <li><strong>Abrí el proyecto</strong> con doble clic en <code>seminario.Rproj</code>. RStudio se abre ya ubicado en la carpeta correcta.</li>
+      <li><strong>Corré la puesta a punto:</strong> abrí <code>00_setup.R</code> desde la pestaña <em>Files</em> y apretá <strong>Source</strong>. La primera vez tarda unos minutos porque instala los paquetes.</li>
+      <li><strong>En cada clase,</strong> descargá su ZIP y descomprimilo dentro de <code>seminario/clases</code>.</li>
+    </ol>
+
+<pre class="arbol"><code>seminario/
+├── seminario.Rproj      ← siempre abrir desde acá
+├── 00_setup.R           ← se corre una sola vez
+├── bases_eph/
+├── Resultados/
+└── clases/
+    └── 01_intro_r/      ← lo que trae cada ZIP de clase</code></pre>
+
+    <div class="aviso">
+      <strong>Si R no encuentra las bases:</strong> casi siempre es porque el ZIP no se descomprimió o porque el script se abrió sin abrir antes <code>seminario.Rproj</code>. Nunca hace falta usar <code>setwd()</code>.
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Seminario “Estadística y programación para estudios del trabajo, desigualdad y pobreza”. Doctorado en Ciencias Sociales, Universidad de Buenos Aires.</p>
+    <p>Consultas: santiagopoy@gmail.com · guidowe45@gmail.com</p>
+  </div>
+</footer>
+
+<script>
+  /* =====================================================================
+     CLASES
+     Para habilitar una clase: subir su ZIP a descargas/ con el nombre
+     indicado en "archivo" y cambiar  disponible: false  por  true.
+     ===================================================================== */
+  const CLASES = [
+    { n: 1, fecha: "08/10", titulo: "Introducción a la programación en R",                  archivo: "clase_01.zip", disponible: true  },
+    { n: 2, fecha: "15/10", titulo: "La EPH: diseño de registro, ponderadores y datos faltantes", archivo: "clase_02.zip", disponible: false },
+    { n: 3, fecha: "22/10", titulo: "Tabulados y medidas de resumen",                       archivo: "clase_03.zip", disponible: false },
+    { n: 4, fecha: "29/10", titulo: "Taller de tabulados y medidas de asociación",          archivo: "clase_04.zip", disponible: false },
+    { n: 5, fecha: "05/11", titulo: "Informalidad y calidad del empleo",                    archivo: "clase_05.zip", disponible: false },
+    { n: 6, fecha: "12/11", titulo: "Distribución del ingreso y visualización",             archivo: "clase_06.zip", disponible: false },
+    { n: 7, fecha: "19/11", titulo: "Medición de la pobreza por ingresos",                  archivo: "clase_07.zip", disponible: false },
+    { n: 8, fecha: "26/11", titulo: "Taller de trabajo final",                              archivo: "clase_08.zip", disponible: false },
+  ];
+
+  const icono = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>';
+
+  document.getElementById("lista-clases").innerHTML = CLASES.map(c => `
+    <li class="card clase${c.disponible ? "" : " pendiente"}">
+      <span class="num">${c.n}</span>
+      <div>
+        <div class="fecha">Clase ${c.n} · ${c.fecha}</div>
+        <h3>${c.titulo}</h3>
+      </div>
+      ${c.disponible
+        ? `<a class="btn" href="descargas/${c.archivo}" download>${icono}Descargar</a>`
+        : `<span class="btn off">Próximamente</span>`}
+    </li>`).join("");
+</script>
+</body>
+</html>

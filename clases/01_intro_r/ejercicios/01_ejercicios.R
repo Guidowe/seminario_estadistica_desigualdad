@@ -26,7 +26,6 @@ baset117 <- get_microdata(year = 2025,trimester = 1)
 # Utilizando el métodos de acceso [], crear un objeto llamado base_estado que tome solo las variables "PONDERA", "CH04","CH06","ESTADO" y"CAT_OCUP"
 
 
-# ESCRIBI TU CODIGO ACA
 
 
 
@@ -35,15 +34,13 @@ baset117 <- get_microdata(year = 2025,trimester = 1)
 # A partir del objeto previo creen un objeto que conserve sólo los primeros 100 casos.
 
 
-# ESCRIBI TU CODIGO ACA
 
 
 # ---- Ejercicio 3 ------------------------------------------------------------
 #
-# Corré la función summary() sobre el objeto base_estado. ¿Algo te llama la atención? 
+# Corré la función summary() sobre el objeto base_estado. ¿Algo te llama la atención?
 #
 
-# ESCRIBI TU CODIGO ACA
 
 
 # ---- Ejercicio 4 ------------------------------------------------------------
@@ -51,12 +48,5 @@ baset117 <- get_microdata(year = 2025,trimester = 1)
 # Aplicá la función sum() sobre la variable PONDERA de la base_estado. ¿Qué representa el resultado?
 #
 
-# ESCRIBI TU CODIGO ACA
 
 
-
-# =============================================================================
-# Si te trabas: volve al .html de la clase, que tiene el codigo comentado.
-# Si seguis trabado, anotalo y lo vemos en la clase siguiente. Trabarse es
-# informacion util para nosotros.
-# =============================================================================

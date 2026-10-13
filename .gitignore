@@ -18,6 +18,9 @@ clases/**/*.R
 # Paquete que se entrega a estudiantes
 entrega/
 *.zip
+*.rar
+# ...salvo las descargas del sitio web
+!descargas/*.zip
 
 # Sistema
 .DS_Store
