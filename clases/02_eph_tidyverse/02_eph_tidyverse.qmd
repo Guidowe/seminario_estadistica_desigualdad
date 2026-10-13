@@ -431,7 +431,7 @@ frecuencias_mas500<- table(
 
 frecuencias_mas500
 ```
-Este resultado nos indica que tenemos `rfrecuencias_mas500[1]` **casos muestrales** en aglomerados de población menor a 500k y `rfrecuencias_mas500[2]` en aglomerados de mayor tamaño.
+Este resultado nos indica que tenemos `r frecuencias_mas500[1]` **casos muestrales** en aglomerados de población menor a 500k y `r frecuencias_mas500[2]` en aglomerados de mayor tamaño.
 
 ## prop.table
 Si queremos expresar esto como frecuencias relativas, podemos aplicar prop.table() al resultado anterior
