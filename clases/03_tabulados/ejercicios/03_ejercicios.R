@@ -6,9 +6,6 @@
 #   Abri el proyecto con doble clic en "seminario.Rproj".
 #   Si no lo hiciste, R no va a encontrar las bases y todo va a fallar.
 #
-# COMO TRABAJAR:
-#   Para el cursor en una linea y apreta Ctrl + Enter (Cmd + Enter en Mac).
-#   Los errores son parte del proceso: leelos, casi siempre dicen que pasa.
 # =============================================================================
 
 
@@ -72,14 +69,9 @@ coef_asociacion <- function(datos, x, y) {
 #      - Las dos dan p practicamente igual a cero. Sirve el p-valor para
 #        responder la pregunta anterior?
 
-# ESCRIBI TU CODIGO ACA
-
-
 
 # ---- Ejercicio 2: otro control para la misma hipotesis ----------------------
 #
-# En clase pusimos a prueba si la relacion entre estado civil y registro era
-# espuria, controlando por grupo etario. No lo era: se atenuaba pero sobrevivia.
 #
 # Probemos ahora con OTRO control: el nivel educativo. Quizas las personas
 # solteras tengan menos credenciales educativas, y eso explique la brecha.
@@ -91,43 +83,24 @@ coef_asociacion <- function(datos, x, y) {
 # d) Preguntas para pensar:
 #      - La asociacion desaparece dentro de algun nivel educativo?
 #      - En cual es mas intensa? En cual mas debil?
-#      - Con dos controles distintos (edad y educacion) la relacion sobrevivio
-#        siempre. Que fuerza tiene esa evidencia? Alcanza para decir que la
-#        relacion es causal?
 
-# ESCRIBI TU CODIGO ACA
+
 
 
 
 # ---- Ejercicio 3: ahora si, una relacion espuria -----------------------------
 #
-# En clase no encontramos ninguna. Vamos a buscar una a proposito.
-#
 # Construi dos variables nuevas:
 #     sexo       -> CH04: 1 = "Varones", 2 = "Mujeres"
 #     ocupacion  -> PP04B1 == 1 -> "Servicio domestico", si no "Resto"
 #
-# a) Calcula la asociacion entre sexo y registro para el total de asalariados.
-#    Vas a ver que da significativa, aunque con una V muy chica.
-# b) Antes de controlar, verifica las dos condiciones de la espuriedad:
-#      - El servicio domestico, esta asociado con el sexo?
-#      - El servicio domestico, esta asociado con el registro?
-# c) Ahora controla: repeti el analisis sexo-registro por separado dentro del
-#    servicio domestico y dentro del resto de los asalariados.
-# d) Preguntas para pensar:
-#      - Que le paso a la brecha dentro de cada grupo? Mira el SIGNO, no solo
-#        el tamano.
-#      - Compara este resultado con el del estado civil que vimos en clase.
-#        En que se diferencian los dos patrones?
-#      - Si solo hubieras mirado la tabla bivariada, que habrias concluido
-#        sobre la situacion de las mujeres asalariadas?
-
-# ESCRIBI TU CODIGO ACA
+# a) Calculá la asociación entre sexo y registro para el total de asalariados.
+#    Es significativa la asociación?
+# b) Aplicá la variable ocupacion (servicio domestico y dentro del resto de los asalariados)
+#    como contról.
+# c) Preguntas:
+#      - ¿Qué le paso a la brecha (epsilon) observada al aplicar el control?
+#      - ¿Cómo explicaríamos ahora la asociación entre no registro y sexo?
 
 
 
-# =============================================================================
-# Si te trabas: volve al .html de la clase, que tiene el codigo comentado.
-# Si seguis trabado, anotalo y lo vemos en la clase siguiente. Trabarse es
-# informacion util para nosotros.
-# =============================================================================
