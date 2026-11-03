@@ -5,22 +5,19 @@ title: "Informalidad y calidad del empleo"
 
 ## Presentación de la clase
 
-Esta clase está destinada a profundizar los conocimientos del paquete **tidyverse** mediante ejercicios vinculados al análisis de la calidad del empleo. Luego de esta sección introductoria, el encuentro se organizará en 3 ejercicios: 
-
--   El primer ejercicio consistirá en el armado de indicadores de calidad del empleo, cruzados con otras variables de la base individual. Se utilizará el paquete [**eph**](https://ropensci.github.io/eph/) para el armado de tabulados, cruzados con otras variables de la base individual.
-
--   En el segundo ejercicio haremos unas breves estimaciones con las nuevas nociones de *sector informal* y *empleo informal* de la EPH.
-
--   El tercer ejercicio consistirá en la utilización del paquete [**eph**](https://ropensci.github.io/eph/) para la descarga de una base de microdatos de la encuesta y el armado de indicadores de calidad del empleo, cruzados con otras variables de la base individual.
+Esta clase está destinada a profundizar los conocimientos del paquete **tidyverse** mediante ejercicios vinculados al análisis de la informalidad y la calidad del empleo. Luego de esta sección introductoria, el encuentro se organizará en 3 ejercicios: 
 
 
-## Estimaciones sobre precariedad e informalidad laboral 
+-   El primer ejercicio propone una breve mirada a las nuevas variables de *sector informal* y *empleo informal* de la EPH. Luego, un ejercicio de aplicaicón para estudiar la asociación del empleo informal con los bajos ingresos, controlando por sexo.
 
-Cuando trabajamos con estadísticas laborales, muchas veces queremos encontrar la expresión empírica de ideas, categorías o conceptos en las características de la población estudiada. Al proceso de ‘bajar’ esas ideas a mediciones o indicadores se lo llama operacionalización. Como las encuestas de hogares muchas veces no tienen el mismo diseño, es nuestra tarea elegir qué preguntas/variables vamos a tomar en consideración.
+-   El segundo ejercicio consiste en el armado de una clasificación simplificada para identificar al  *sector informal urbano* en base al criterio productivo de PREALC-OIT. Se utilizará el paquete [**eph**](https://ropensci.github.io/eph/) para trabajar con la variable de calificación del puesto.
 
-A lo largo de esta clase vamos a trabajar con dos conceptos muy utilizados en los estudios laborales: la *informalidad* y *la calidad del empleo*.
+-   El tercer ejercicio consistirá en el armado de un índice de calidad del empleo para el universo de trabajadores asalariados, a partir de tres variables.
 
-La definición de **sector informal** tradicionalmente hacía referencia a una característica típica de los mercados de trabajo latinoamericanos, donde es muy extendido el empleo en establecimientos pequeños y de muy baja productividad. La definición ‘clásica’ del Sector Informal Urbano del PREALC-OIT, está asociada así a la dimensión productiva de la unidad en la que se realiza la actividad laboral. Así, por "informalidad" esta noción apuntaba a identificar los empleos en establecimientos con escaso capital, baja escala y baja tecnología, en muchos casos en unidades productivas unipersonales. ¿Cómo se operacionalizaba esta noción? Hay muchas variantes en la literatura, pero un criterio bastante difundido para clasificar a una persona como integrante del Sector Informal incluía:
+
+## Estimaciones sobre informalidad laboral 
+
+La definición de **sector informal** tradicionalmente hacía referencia a una característica típica de los mercados de trabajo de países periféricos, donde es muy extendido el empleo en establecimientos pequeños y de muy baja productividad. La definición ‘clásica’ del Sector Informal Urbano del PREALC-OIT, está asociada así a la dimensión productiva de la unidad en la que se realiza la actividad laboral. Así, por "informalidad" se apuntaba a identificar los empleos en establecimientos con escaso capital, baja escala y baja tecnología, en muchos casos en unidades productivas unipersonales. ¿Cómo se operacionalizaba esta noción? Hay muchas variantes en la literatura, pero un criterio bastante difundido para clasificar a una persona como integrante del Sector Informal incluía:
 
 -   Asalariado/a en establecimientos de hasta 5 personas
 
@@ -30,13 +27,11 @@ La definición de **sector informal** tradicionalmente hacía referencia a una c
 
 -   Trabajador/a familiar sin salario
 
-Recientemente, la OIT revisó la noción del **sector informal**, asociandola a un criterio más bien legal o de registro de la actividad económica. Aparece así una distinción entre *sector informal* (característica que refiere a la inexistencia de una formalización legal de la actividad económica de una unidad productiva) y el *empleo informal* (que refiere estríctamente a la formalización de la relación laboral). Esta redifinición implica que:
+Recientemente, la OIT revisó la noción del **sector informal**, asociandola a un criterio más bien legal o de registro de la actividad económica. Aparece así una distinción entre *sector informal* (característica que refiere a las unidades productivas que no cuentan con una formalización legal de la actividad ) y el *empleo informal* (que refiere a los puestos de trabajo que se encuentran por fuera del marco normativo). Esta redifinición implica que:
 
 -   Puede existir *empleo informal* dentro del *sector formal*, por ejemplo, en caso de que un individuo este trabajando sin un contrato legal para una empresa que está constituída como sociedad (que declara y tributa por su actividad económica).
 
--   Las Encuestas de Hogares incorporaran preguntas para distinguir sector/empleo formal e informal. Sinteticamente, en el caso de la EPH, desde el 4to trimestre de 2024 se incorporaron preguntas para tratar de identificar si los asalariados no registrados pertenecen a unidades formales o informales y preguntas para identificar si los trabajadores independientes formalizan o no su actividad económica (más allá de la realización de aportes jubilatorios propios)
-
--   La noción del sector formal comienza a alejarse cada vez más de la noción de **calidad del empleo**, que refiere a distintas dimensiones con las que se puede caracterizar a un empleo. Estas van desde las garantías de cumplimiento de derechos laborales, la suficiencia del ingreso percibido, la estabilidad en el puesto, la cobertura frente a riesgos del trabajo, entre otras. La calidad del empleo puede vincularse a un ‘tipo ideal’ de empleo protegido (con contrato legal, por tiempo indeterminado, tiempo completo, con seguridad social, seguro médico, vacaciones pagas, etc.). 
+-   Las Encuestas de Hogares incorporaran preguntas para distinguir sector/empleo formal e informal. Sinteticamente, en el caso de la EPH, desde el 4to trimestre de 2023 se incorporaron preguntas para tratar de identificar si los asalariados no registrados pertenecen a unidades formales o informales y preguntas para identificar si los trabajadores independientes formalizan o no su actividad económica (más allá de la realización de aportes jubilatorios propios)
 
 
 # Carga de paquetes y base
@@ -47,6 +42,7 @@ Antes de empezar con los ejercicios, cargamos los paquetes en nuestro entonrno d
 library(tidyverse)
 library(openxlsx)
 library(eph)
+library(questionr)
 ```
 
 ## Levantamos la base de microdatos 
@@ -65,7 +61,7 @@ individual_25_t1 <-
 
 ## Criterio legal (nuevas variables)
 
-Desde el 4to trimestre de 2024 la EPH incorpora dos variables ya construidas por INDEC que
+Desde el 4to trimestre de 2023 la EPH incorpora dos variables ya construidas por INDEC que
 operacionalizan la definición "legal" o de registro: `SECTOR` (formal / informal / hogares) y
 `EMPLEO` (formal / informal). Empecemos por recodificarlas con etiquetas legibles, junto con la
 categoría ocupacional, que vamos a usar para desagregar.
@@ -81,19 +77,19 @@ ocupados <- individual_25_t1 %>%
                 CAT_OCUP == 4 ~ "Trab. familiar s/rem.",
                 TRUE          ~ "Ns/Nr"),
       levels = c("Patrón","Cuenta propia","Asalariado","Trab. familiar s/rem.","Ns/Nr")),
-    sector_legal =
+     sector_legal =
       case_when(SECTOR == 1 ~ "Sector formal",
                 SECTOR == 2 ~ "Sector informal",
                 SECTOR == 3 ~ "Hogares",
                 TRUE        ~ "Ns/Nr"),
+    sexo = ifelse(CH04 %in% 1,"Varon","Mujer"),
     empleo_legal =
       case_when(EMPLEO == 1 ~ "Empleo formal",
                 EMPLEO == 2 ~ "Empleo informal",
                 TRUE        ~ "Ns/Nr"))
 ```
 
-El cruce entre ambas variables es el que muestra el punto conceptual de la nueva definición: hay
-**empleo informal dentro del sector formal**.
+Veamos el cruce entre ambas variables. Allí se puede ver tanto la existencia de **empleo informal dentro del sector formal** como aquellos casos que no logran ser clasificados en términos de sector y/o tipo de empleo.
 
 ```{r}
 calculate_tabulates(base = ocupados,
@@ -111,22 +107,108 @@ calculate_tabulates(base = ocupados,
                     weights = "PONDERA",
                     add.percentage = "row")
 ```
-### Desagregación s/ categoría ocupacional
+### Ejercicio aplicado: informalidad y bajos ingresos
+¿La incidenciade los bajos ingresos es mayor entre las personas con empleo informal que entre quienes tienen empleo formal? 
 
-Agreguemos la categoría ocupacional. Con `add.percentage = "col"` leemos la **tasa de empleo informal dentro de cada categoría**.
+Para simplificar el ejercicio, tomemos directo la variable *DECOCUR* que refleja el décil de ingreso de la ocupación principal basado en el ingreso mensual (no ajusta por horas trabajadas). Nos quedamos con los casos que tienen *DECOCUR* entre 1 y 10 (el valor 0 son casos sin ingresos y el valor 12 no respuesta) y con aquellos que tienen asignada una categoría de *EMPLEO* fomrmal o informal (valores 1 y 2). Usamos *PONDIIO*, dado que vamos a trabajar con variable de ingresos de la ocupación principal.
 
 ```{r}
-calculate_tabulates(base = ocupados,
-                    x = "empleo_legal",
-                    y = "cat_ocup",
-                    weights = "PONDERA",
+empleo_con_deciles <- ocupados  %>% 
+  filter(DECOCUR   %in% 1:10,EMPLEO %in% 1:2)%>% 
+  mutate(low_paid = ifelse(DECOCUR %in% 1:3,"Si","No"),
+         pondiio_recalibrado = PONDIIO/sum(PONDIIO)*n())
+
+calculate_tabulates(base = empleo_con_deciles,
+                    x = "low_paid",
+                    y = "empleo_legal",
+                    weights = "PONDIIO",
                     add.percentage = "col")
 ```
+La incidencia de bajos ingresos pasa de 10,3% entre formales a 57,9% entre informales: una diferencia de 47,6 puntos porcentuales. Hagamos el test Chi cuadrado:
 
+::: {.callout-warning}
+## ⚠️ Chi cuadrado sobre la muestra calibrada
+
+El test de chi cuadrado se calcula **sobre valores muestrales**, ya que si le pasáramos la población expandida (millones de casos), *cualquier* diferencia, por mínima que sea, daría "altamente significativa". Ahora bien, si aplicamos un *table* sin ponderar y tomamos el chisq, no estamos considerando que hay casos que representan a más personas que otras. Eso es lo que veníamos haciendo hasta ahora. Si queremos considerar el diseño probabilistico de la encuesta, deberíamos hacer pesar distinto a cada caso, aún cuando no expandamos al total poblacional. Para eso, podemos usar *pondiio_recalibrado*. Los resultados con la EPH son muy similares, pero el 2do procedimiento es formalmente más adecuado.
+:::
+
+```{r}
+tabla_muestral <- table(empleo_con_deciles$low_paid, empleo_con_deciles$empleo_legal)
+print("Tabla muestral sin recalibrar")
+tabla_muestral
+
+tabla_muestral_calibrada <- wtd.table(
+  x = empleo_con_deciles$low_paid,
+  y = empleo_con_deciles$empleo_legal,
+  weights = empleo_con_deciles$pondiio_recalibrado)
+print("Tabla muestral recalibrada")
+tabla_muestral_calibrada
+
+test_chi <- chisq.test(tabla_muestral_calibrada)
+test_chi
+
+n_casos <- sum(tabla_muestral_calibrada)
+chi2     <- unname(test_chi$statistic)
+vcramer     <- sqrt(chi2 / n_casos)
+paste("V de Cramer: ",vcramer)
+
+```
+¿La intensidad de esta relación es la misma si controlamos por sexo? 
+
+```{r}
+varones<- empleo_con_deciles |> filter(sexo == "Varon")
+mujeres<- empleo_con_deciles |> filter(sexo == "Mujer")
+
+calculate_tabulates(base = varones,
+                    x = "low_paid",
+                    y = "empleo_legal",
+                    weights = "PONDIIO",
+                    add.percentage = "col")
+
+calculate_tabulates(base = mujeres,
+                    x = "low_paid",
+                    y = "empleo_legal",
+                    weights = "PONDIIO",
+                    add.percentage = "col")
+```
+Acá aparece una diferencia clara. Entre varones, la incidencia de bajos ingresos pasa de 6,3% entre los formales a 46,1% entre informales (diferencia de 39,8 puntos porcentuales). Entre mujeres, pasa del 15.6 % al 72.4 % (diferencia de 56,8 puntos porcentuales).    
+
+Veamos que ocurre con el Chi cuadrado y la V de Cramer
+```{r}
+varones_tabla<- wtd.table(
+  x = varones$low_paid,
+  y = varones$empleo_legal,
+  weights = varones$pondiio_recalibrado)
+
+varones_chi <- chisq.test(varones_tabla)
+varones_n_casos <- sum(varones_tabla)
+varones_chi2     <- unname(varones_chi$statistic)
+varones_vcramer     <- sqrt(varones_chi2 / varones_n_casos)
+print("Test Chi Varones:")
+varones_chi
+paste("V de Cramer Varones: ",varones_vcramer)
+
+```
+
+```{r}
+mujeres_tabla<- wtd.table(
+  x = mujeres$low_paid,
+  y = mujeres$empleo_legal,
+  weights = mujeres$pondiio_recalibrado)
+
+mujeres_chi <- chisq.test(mujeres_tabla)
+mujeres_n_casos <- sum(mujeres_tabla)
+mujeres_chi2     <- unname(mujeres_chi$statistic)
+mujeres_vcramer     <- sqrt(mujeres_chi2 / mujeres_n_casos)
+print("Test Chi Mujeres: ")
+mujeres_chi
+paste("V de Cramer Mujeres: ",mujeres_vcramer)
+```
+Conclusión: La intensidad de la asociación entre informalidad y bajos ingresos es mayor entre las mujeres. Hay un efecto de interacción.
 
 ## Criterio productivo: el Sector Informal Urbano (SIU)
 
-Vamos ahora a construir *a mano* la noción "clásica" del SIU que presentamos en la introducción.
+Vamos ahora a construir la noción "clásica" del SIU que presentamos en la introducción.
 A diferencia del criterio legal, acá no hay una variable ya hecha: tenemos que combinar la
 **categoría ocupacional**, el **tamaño del establecimiento** y la **calificación del puesto**.
 
@@ -253,11 +335,13 @@ kableExtra::kable(siu_grupos)
 Y cómo se compone por categoría ocupacional:
 
 ```{r}
-calculate_tabulates(base = ocupados_siu,
+siu_cat_ocup<- calculate_tabulates(base = ocupados_siu,
                     x = "siu_productivo",
                     y = "cat_ocup",
                     weights = "PONDERA",
                     add.percentage = "row")
+
+kableExtra::kable(siu_cat_ocup)
 ```
 
 
@@ -277,9 +361,13 @@ calculate_tabulates(base = ocupados_siu,
 ```
 
 # Indicadores de Calidad del Empleo
-Para presentar un ejercicio sobre la calidad del empleo, aplicaremos un filtro para conservar únicamente a la población asalariada.
 
-Consideremos las siguiente tres variables como expresiones que hacen a la precariedad laboral entre los asalariados:\
+La noción de **calidad del empleo** refiere a distintas dimensiones con las que se puede caracterizar a un empleo en términos de las consecuencias sobre la vida del trabajador. Estas van desde las garantías de cumplimiento de derechos laborales, la suficiencia del ingreso percibido, la estabilidad en el puesto, la cobertura frente a riesgos del trabajo, entre otras. La calidad del empleo puede vincularse a un ‘tipo ideal’ de empleo protegido (con contrato legal, por tiempo indeterminado, tiempo completo, con seguridad social, seguro médico, vacaciones pagas, etc.). También existe en la literatura la inclusión de dimensiones subjetivas vinculadas a la percepción del propio trabajador (aunque no tenemos preguntas en la EPH).
+
+
+Para presentar un ejercicio sencillo vinculado a la calidad del empleo, aplicaremos un filtro para conservar únicamente a la población asalariada.
+
+Consideremos las siguiente tres variables como expresiones que hacen a la calidad del empleo entre los asalariados:\
 - la falta de descuentos jubilatorios\
 - El empleo de jornada part-time involuntario\
 - El empleo por tiempo determinado
@@ -354,7 +442,7 @@ distribucion_deficit
 
 ¿Cómo da el índice entre varones y mujeres?
 ```{r}
-calculate_tabulates(base = indice_deficit,                    x = "deficit",y = "CH04",
+calculate_tabulates(base = indice_deficit,                    x = "deficit",y = "sexo",
                     weights = "PONDERA",
                     add.percentage = "col")
 ```
