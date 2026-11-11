@@ -32,8 +32,11 @@ ingreso**. Al terminar la práctica vamos a poder:
   entre extremos.
 - Construir la **curva de Lorenz** y el **coeficiente de Gini**
   ponderado, y compararlo entre varones y mujeres.
-- Interpretar un **coeficiente de correlación** y reconocer cuándo una
-  relación **no es lineal**, ajustándola con `geom_smooth()`.
+- Descomponer el **ingreso total individual** según sus fuentes
+  (laborales, políticas sociales y otros no laborales) y comparar esa
+  composición entre varones y mujeres.
+- Interpretar un **coeficiente de correlación** y evaluar su
+  **significancia** con un test t.
 
 # Carga de la base
 
@@ -403,7 +406,111 @@ sus potencialidades:
 
 # Ingresos en la EPH
 
-## Momentos de una distribución
+## Las fuentes del ingreso total
+
+La variable
+`P47T` (ingreso total individual) suma todos los ingresos percibidos por cada individuo. Sin embargo, podemos recurrir a las variables desagregadas para **descomponer** el ingreso total en grandes bloques.
+
+- **Laborales** (`itl`): ocupación principal (`P21`), otras ocupaciones
+  (`TOT_P12`) y aguinaldo, bonificaciones y retroactivos de la ocupación
+  principal (`PP08J1` a `PP08J3`).
+- **Políticas sociales** (`i_polsoc`): jubilaciones y pensiones (con su
+  aguinaldo y retroactivos), seguro de desempleo, AUH y otros planes,
+  y becas de estudio.
+- **Otros no laborales** (`i_otros_nolab`): alquileres,
+  ganancias de negocios, intereses, cuotas alimentarias y otros.
+
+::: {.callout-warning appearance="simple"}
+## Bases post 4T 2024
+
+Desde el 4to trimestre de 2024, la EPH desagrega algunos montos que antes venían en una sola variable. Por ejemplo, `V2_M` (ingreso por jubilación o pensión) ahora se presenta de forma desagregada como `V2_01_M` (contributivas), `V2_02_M` (moratoria y amas de casa) y `V2_03_M`(otras pensiones, entre ellas, la PUAM).
+:::
+
+```{r}
+ingresos_fuente_reconstruyo <- individual_25_t1 %>%
+  mutate(PONDII = as.numeric(PONDII)) %>%   # Para evitar Integer Overflow
+  filter(P47T > 0, PONDII > 0) %>%           # Personas con ingreso total positivo
+  # Reconstruimos las variables que desde 2024 4T vienen desagregadas
+  mutate(V2_M  = V2_01_M + V2_02_M + V2_03_M,     # jubilaciones y pensiones
+         V5_M  = V5_01_M + V5_02_M + V5_03_M,     # AUH, planes y ayudas sociales
+         V11_M = V11_01_M + V11_02_M,             # becas de estudio
+         V21_M = V21_01_M + V21_02_M + V21_03_M,  # aguinaldo de jubilaciones
+         V22_M = V22_01_M + V22_02_M + V22_03_M)  # retroactivo de jubilaciones
+
+ingresos_fuente <- ingresos_fuente_reconstruyo %>%
+  mutate(PP08J1 = ifelse(is.na(PP08J1), yes = 0, no = PP08J1),
+         PP08J2 = ifelse(is.na(PP08J2), yes = 0, no = PP08J2),
+         PP08J3 = ifelse(is.na(PP08J3), yes = 0, no = PP08J3),
+         itl  = TOT_P12 + P21 + PP08J1 + PP08J2 + PP08J3,
+         inl  = V2_M + V3_M + V4_M + V5_M + V8_M + V9_M + V10_M + V11_M +
+                V12_M + V18_M + V19_AM + V21_M + V22_M,
+         i_polsoc      = V2_M + V4_M + V5_M + V11_M + V21_M + V22_M,
+         i_jubila      = V2_M + V21_M + V22_M,
+         i_otros_nolab = V3_M + V8_M + V9_M + V10_M + V12_M + V18_M + V19_AM,
+         Sexo = case_when(CH04 == 1 ~ "Varón",
+                          CH04 == 2 ~ "Mujer"))
+```
+
+
+Veamos, por ejemplo, para varones y mujeres, qué parte de la **masa** de
+ingresos totales viene de cada fuente. Ponderamos con `PONDII`, que es
+el ponderador del ingreso total individual.
+
+```{r}
+composicion_sexo <- ingresos_fuente %>%
+  group_by(Sexo) %>%
+  summarise(Laborales            = sum(itl * PONDII),
+            `Políticas sociales` = sum(i_polsoc * PONDII),
+            `Otros no laborales` = sum(i_otros_nolab * PONDII),
+            .groups = "drop") %>%
+  pivot_longer(cols = -Sexo, names_to = "fuente", values_to = "masa") %>%
+  group_by(Sexo) %>%
+  mutate(participacion = masa / sum(masa)) %>%
+  ungroup() %>%
+  mutate(fuente = factor(fuente, levels = c("Otros no laborales",
+                                            "Políticas sociales",
+                                            "Laborales")))
+
+composicion_sexo
+
+ggplot(composicion_sexo, aes(x = Sexo, y = participacion, fill = fuente)) +
+  geom_col(width = 0.6) +
+  geom_text(aes(label = scales::percent(participacion, accuracy = 1)),
+            position = position_stack(vjust = 0.5),
+            color = "white", size = 3.5) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_fill_manual(values = c("Laborales"            = "#45818e",
+                               "Políticas sociales"   = "#CA225E",
+                               "Otros no laborales"   = "grey50"),
+                    breaks = c("Laborales", "Políticas sociales",
+                               "Otros no laborales")) +
+  coord_flip() +
+  labs(title = "Composición del ingreso total individual según fuente, por sexo",
+       subtitle = "Personas con ingresos. Total aglomerados EPH. 1er trimestre de 2025.",
+       x = NULL, y = "% de la masa de ingreso total", fill = NULL) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+En los varones, cerca del **85%** del ingreso total viene del trabajo.
+En las mujeres esa proporción baja a alrededor del **68%**, y las
+políticas sociales pesan más del doble (≈ 28% contra ≈ 12%). La mayor
+parte de esa diferencia son **jubilaciones y pensiones** (pueden verlo
+con `i_jubila`): representan el 23% del ingreso de las mujeres y el 12%
+del de los varones. Ahí influyen la mayor esperanza de vida de las mujeres y
+las moratorias previsionales, que permitieron jubilarse a muchas mujeres
+que no tenían aportes. Los "otros no laborales" son marginales en
+ambos casos.
+
+::: {.callout-note appearance="simple"}
+## En lo que sigue: `P21`
+
+De acá en adelante nos concentramos en `P21`, el **ingreso de la
+ocupación principal**, y por lo tanto en la población **ocupada**. Al
+trabajar con esta variable, el ponderador correspondiente es `PONDIIO`.
+:::
+
+## Momentos de la distribución
 
 Como vimos en la clase 2, la función `summary()` nos permite tener una
 primera aproximación de las medidas de tendencia central de una variable
@@ -425,20 +532,8 @@ individual_25_t1 %>%
   unique()                 # ¿Qué valores únicos hay?
 ```
 
-::: {.callout-important appearance="simple"}
-## Aviso
 
-Es muy importante, en función de la variable utilizada, trabajar con el
-**ponderador especificado por el diseño de registro**. Para las
-variables del ingreso de la ocupación principal, ese ponderador es
-`PONDIIO` (y `PONDII` para el ingreso total individual). El INDEC le
-asigna ponderador 0 a los casos de no respuesta, de modo que cualquier
-estimación ponderada los excluye automáticamente. Si en cambio usáramos
-`PONDERA`, los `-9` entrarían al promedio como si fueran ingresos
-negativos.
-:::
-
-## Brecha de ingresos
+## Brecha
 
 En este ejercicio vamos a estudiar cómo se distribuye el ingreso de la
 ocupación principal entre los ocupados. Queremos crear 5 quintiles de
@@ -532,7 +627,7 @@ lo mismo. Los percentiles siempre se definen **sobre la población que se
 quiere describir**.
 :::
 
-Con la base ya quintilada, agrupamos y calculamos los indicadores:
+Con la variable de quintil ya creada, agrupamos y calculamos los indicadores:
 
 ```{r}
 resultado <- base_con_quintiles %>%
@@ -540,7 +635,7 @@ resultado <- base_con_quintiles %>%
   summarise(casos             = n(),
             casos_pondera     = sum(PONDIIO),
             tasa_feminizacion = sum(PONDIIO[CH04 == 2]) / sum(PONDIIO),
-            salario_prom      = weighted.mean(x = P21, w = PONDIIO),
+            ingreso_prom      = weighted.mean(x = P21, w = PONDIIO),
             masa_ingresos     = sum(P21 * PONDIIO),
             .groups = "drop") %>%
   mutate(part_masa = masa_ingresos / sum(masa_ingresos))
@@ -561,8 +656,8 @@ promedio del quintil más alto y el del quintil más bajo. Nos dice
 
 ```{r}
 brecha <- resultado %>%
-  summarise(ingreso_q1 = salario_prom[quintil == 1],
-            ingreso_q5 = salario_prom[quintil == 5],
+  summarise(ingreso_q1 = ingreso_prom[quintil == 1],
+            ingreso_q5 = ingreso_prom[quintil == 5],
             brecha_5_1 = ingreso_q5 / ingreso_q1)
 
 brecha
@@ -600,12 +695,13 @@ ggplot(resultado, aes(x = factor(quintil), y = tasa_feminizacion)) +
   theme_minimal()
 ```
 
-## Coeficiente de Gini
+## Gini
 
 La brecha 5/1 mira **sólo los dos extremos** y descarta todo lo que pasa
 en el medio. El coeficiente de Gini, en cambio, resume en un único
-número la desigualdad de **toda** la distribución. \### La curva de
-Lorenz
+número la desigualdad de **toda** la distribución.
+
+### La curva de Lorenz
 
 La **curva de Lorenz** ordena a la población de menor a mayor ingreso y
 muestra, para cada porcentaje acumulado de población ($p$), qué
@@ -701,26 +797,27 @@ Hasta acá venimos estudiando la distribución de **una** variable
 continua. Cuando queremos estudiar la relación entre **dos** variables
 continuas, una primera herramienta es el **coeficiente de correlación de
 Pearson**, que mide la fuerza y el sentido de la asociación **lineal**
-entre ambas.Puede tomar valores entre -1 (relación negativa perfecta) y
+entre ambas. Puede tomar valores entre -1 (relación negativa perfecta) y
 1 (relación positiva perfecta), pasando por 0 (si no existe una relación
 lineal). Su valor no tiene unidades y no es sensible a transformaciones
-lineales en las variables. ![](../../img/correlaciones.png)
+lineales en las variables.
 
-La correlación líneal surge de la siguiente fórmula:
+![](../../img/correlaciones.png)
+
+La correlación lineal surge de la siguiente fórmula:
 
 $$\rho_{xy} \equiv r_{xy} = \frac{\sum_{i=1}^n (x_{i} - \overline{x}_{i})(y_{i} - \overline{y}_{i})}{\sqrt{\sum_{i=1}^n (x_{i} - \overline{x}_{i})^2} \sqrt{\sum_{i=1}^n (y_{i} - \overline{y}_{i})^2}}=\frac{\sum_{i=1}^n (x_{i} - \overline{x}_{i})(y_{i} - \overline{y}_{i})}{(n - 1)s_x s_y} =\frac{cov(x,y)}{s_x s_y} $$
 
-## Matriz de correlación
+### Exploración visual con `ggpairs()`
 
-La **matriz de correlación** nos permite visualizar rápidamente las
-principales relaciones entre las variables. Calculemos la matriz de
-correlaciones para tres variables continuas de la EPH:
+Antes de calcular coeficientes conviene **mirar** las relaciones.
+Trabajamos con tres variables continuas de la EPH:
 
-- Ingreso Ocup Pppal (filtramos ingresos positivos)
+- Ingreso de la ocupación principal (filtramos ingresos positivos)
 
 - Edad (filtramos a 14-65, para contemplar edades laborales)
 
-- Horas Trabajadas (casos positivos y que no sean 999, no rta)
+- Horas trabajadas (casos positivos y que no sean 999, no respuesta)
 
 ```{r}
 ocupados_edad <- ocupados_con_ingreso %>%
@@ -729,7 +826,41 @@ ocupados_edad <- ocupados_con_ingreso %>%
          CH06 %in% c(14:65),
          PP3E_TOT >0 & PP3E_TOT != 999,
          )  
+```
 
+Si tenemos relativamente pocas variables, podemos usar `ggpairs()` (del
+paquete **GGally**) para ver de una sola vez todas las relaciones entre
+ellas: en la diagonal la distribución de cada variable, debajo los
+diagramas de dispersión y arriba los coeficientes de correlación. Una
+funcionalidad útil es que nos permite calcular la correlación
+**controlando por una variable categórica** (en este caso, el sexo), lo
+que nos acerca a la idea de una correlación parcial.
+
+```{r,warning=FALSE,message=F}
+ocup_edad_sexo<- ocupados_edad %>% 
+  select(Sexo,P21,CH06,PP3E_TOT)
+
+GGally::ggpairs(ocup_edad_sexo,
+        ggplot2::aes(
+          color = Sexo,
+          fill = Sexo,
+          alpha = 0.8
+        ),
+        labeller = label_wrap_gen(width = 5)) +
+  theme_minimal() +
+  scale_color_manual(values = c("#45818e", "#CA225E")) +
+  scale_fill_manual(values = c("#45818e", "#CA225E")) +
+  theme(strip.text.x = element_text(size = 10),
+        strip.text.y = element_text(size = 10))
+```
+
+### Matriz de correlación
+
+La **matriz de correlación** nos permite resumir en una tabla las
+correlaciones entre todos los pares de variables. Sumamos el ingreso
+total no laboral (`T_VI`):
+
+```{r}
 corr <- ocupados_edad %>% 
   select(P21,CH06,PP3E_TOT,T_VI) %>% 
   # Calculamos la matriz de correlaciones
@@ -751,134 +882,83 @@ corr %>%
   corrplot(tl.col = "black", method = "square")
 ```
 
-Grafiquemos la relación (un tanto obvia) más fuerte de las observadas
-con una nube de puntos (ingreso total mensual y horas trabajadas)
+La matriz muestra que la asociación más fuerte es entre el ingreso de
+la ocupación principal y las horas trabajadas. Las demás correlaciones
+son bastante más débiles.
+
+### ¿Es significativa la correlación?
+
+El coeficiente que calculamos describe **la muestra**. La pregunta
+inferencial es si en la **población** existe alguna asociación lineal, o
+si el valor observado podría deberse al azar del muestreo. Para eso se
+usa un **test t**, cuya hipótesis nula es que la correlación poblacional
+es cero ($H_0: \rho = 0$). El estadístico se calcula a partir de $r$ y
+del tamaño de la muestra:
+
+$$t = \frac{r\sqrt{n-2}}{\sqrt{1-r^2}} \qquad \text{con } n-2 \text{ grados de libertad}$$
+
+En R lo hace la función `cor.test()`. Probemos con ingreso y horas
+trabajadas:
 
 ```{r}
-graf_horas_ingreso <- ggplot(ocupados_edad, aes(x = PP3E_TOT, y = P21)) +
-  geom_point(alpha = 0.1, color = "steelblue") +
-  scale_y_continuous(labels = scales::number_format(big.mark = ".", decimal.mark = ",")) +
-  coord_cartesian(ylim = c(0, 3000000)) +
-  labs(title = "Ingreso de la ocupación principal según horas trabajadas ",
-       subtitle = "Ocupados con ingresos. Total aglomerados EPH. 1er trimestre de 2025.",
-       x = "Horas", y = "Ingreso de la ocupación principal") +
-  theme_minimal()
+test_horas <- cor.test(ocupados_edad$P21, ocupados_edad$PP3E_TOT,
+                       method = "pearson")
 
-graf_horas_ingreso
+test_horas
 ```
 
-La nube de puntos es tan densa que cuesta leer algo. Sin embargo, se
-llega a intuir la relación positiva.
-
-### Ajustar la relación con `geom_smooth()`
-
-`geom_smooth()` es la capa de `ggplot` que dibuja una línea de ajuste
-sobre los datos. Con `method = "lm"` ajusta un modelo lineal, y con el
-parámetro `formula` podemos cambiar la especificación de ese modelo. Le
-pasamos `se = FALSE` para que no dibuje el intervalo de confianza
-alrededor de la línea
-
-```{r}
-graf_horas_ingreso +
-    geom_smooth(method = "lm",
-                formula = y ~ x,
-                se = FALSE, linewidth = 1)
-```
-
-Podemos cambiar la especificación de ese modelo comparando:
-
-- `y ~ x`: la recta, que es lo que la correlación de Pearson está  midiendo.
-- `y ~ poly(x, 2)`: un polinomio de grado 2, es decir, una **parábola**.
-
-```{r}
-ggplot(ocupados_edad, aes(x = PP3E_TOT, y = P21, weight = PONDIIO)) +
-  geom_point(alpha = 0.08, color = "grey50") +
-  geom_smooth(aes(color = "Lineal (y ~ x)"),
-              method = "lm", formula = y ~ x, se = FALSE, linewidth = 1) +
-  geom_smooth(aes(color = "Cuadrática (y ~ poly(x, 2))"),
-              method = "lm", formula = y ~ poly(x, 2), se = FALSE, linewidth = 1) +
-  scale_y_continuous(labels = scales::number_format(big.mark = ".", decimal.mark = ",")) +
-  coord_cartesian(ylim = c(0, 3000000)) +   # zoom, sin descartar casos del ajuste
-  scale_color_manual(values = c("Lineal (y ~ x)" = "grey25",
-                                "Cuadrática (y ~ poly(x, 2))" = "salmon")) +
-  labs(title = "Ingreso según horas trabajadas: ajuste lineal vs. cuadrático",
-       subtitle = "Ocupados con ingresos. Total aglomerados EPH. 1er trimestre de 2025.",
-       x = "Horas", y = "Ingreso de la ocupación principal", color = NULL) +
-  theme_minimal() +
-  theme(legend.position = "bottom")
-```
-
-Noten que acá usamos `coord_cartesian()` y no `limits =`: queremos
-acercar la mirada al 99% de los casos, pero **sin** sacar del ajuste a
-los ingresos más altos. Si los recortáramos con `limits =`, las dos
-líneas se estarían estimando sobre una población distinta de la que
-decimos describir. Al ajustar un modelo cuadrático, surge una parábola
-en forma de U invertida (lo que sugeriría que trabajar más horas está
-asociado a un aumento del ingreso mensual de la ocupación ppal sólo
-hasta un cierto nivel -cercano a 66hs- ).
+La salida informa el valor de $r$, el estadístico $t$, el p-valor y un
+intervalo de confianza al 95%. Acá $r$ =
+`r round(test_horas$estimate, 2)` y el p-valor es prácticamente cero, así
+que rechazamos $H_0$. Hay asociación lineal positiva entre horas e
+ingreso, y su intervalo de confianza
+(`r round(test_horas$conf.int[1], 2)` a `r round(test_horas$conf.int[2], 2)`)
+es angosto.
 
 ::: {.callout-note appearance="simple"}
-## Ajuste ponderado
+## Sin ponderar y sin diseño muestral
 
-Y le pasamos `weight = PONDIIO` en el `aes()` para que el ajuste sea
-ponderado, igual que el resto de nuestras estimaciones. Ojo: `cor()`, en
-cambio, no admite ponderadores, así que el coeficiente que calculamos
-más arriba está construido sobre los casos muestrales.
+`cor.test()` trata a los casos como una muestra aleatoria simple y no
+admite ponderadores. La EPH tiene un diseño por conglomerados, así que
+los p-valores que devuelve son algo optimistas. Para una primera
+exploración alcanza, pero conviene tenerlo presente.
 :::
-
-## GGpairs 
-
-Si tenemos relativamente pocas variables y casos, podemos usar  *ggpairs()* para ver todas las relaciones
-entre las variables. Una funcionalidad útil es que nos permite correr una correlación controlando por una variable categórica (lo que nos acerca a una correlación parcial) 
-
-```{r,warning=FALSE,message=F}
-ocup_edad_sexo<- ocupados_edad %>% 
-  select(Sexo,P21,CH06,PP3E_TOT)
-
-GGally::ggpairs(ocup_edad_sexo,
-        ggplot2::aes(
-          color = Sexo,
-          fill = Sexo,
-          alpha = 0.8
-        ),
-        labeller = label_wrap_gen(width = 5)) +
-  theme_minimal() +
-  scale_color_manual(values = c("#45818e", "#CA225E")) +
-  scale_fill_manual(values = c("#45818e", "#CA225E")) +
-  theme(strip.text.x = element_text(size = 10),
-        strip.text.y = element_text(size = 10))
-```
 
 # Ejercicios
 
 ## Para practicar
 
-- Calcular el promedio del ingreso por ocupación principal (variable
-  **P21**) para **asalariados** con y sin **descuento jubilatorio**
-  (variable **PP07H**). Luego realizar un gráfico de barras donde se
-  comparen ambos valores (para el 1er trimestre de 2025).\
-  Pistas: se deben filtrar previamente los ingresos mayores a 0 (**P21
-  \> 0**). Chequear qué ponderador corresponde utilizar.
+- **Deciles y brecha 10/1.** Repetir el armado de quintiles de la clase
+  pero con `n = 10`. Calcular la brecha entre el ingreso medio del decil
+  10 y el del decil 1 y compararla con la brecha 5/1. ¿Cuánto cambia?\
+  Pista: no se olviden de `set.seed()` y de perturbar `P21`.
 
-- Graficar la distribución del ingreso por ocupación principal para
-  asalariados, cuentapropistas y patrones, con el tipo de gráfico
-  kernel.\
-  Pista: usar la función `facet_wrap()` para separar cada una de las
-  categorías ocupacionales.\
-  Sugerencia: incorporar la línea
-  `scale_x_continuous(limits = c(0, 1000000))` entre las capas del
-  gráfico. ¿Qué cambió?
+- **Gini por región.** Calcular el Gini ponderado de `P21` para los
+  ocupados con ingresos de cada región (variable `REGION`, unida con el
+  diccionario de regiones). Graficarlo con `geom_col()` ordenando las
+  barras de mayor a menor. ¿Qué región es más desigual?\
+  Pista: `reldist::gini()` dentro de un `summarise()` agrupado, y
+  `reorder()` en el eje x.
+
+- **Correlación por sexo.** Con la base `ocupados_edad`, correr
+  `cor.test()` entre ingreso de la ocupación principal y horas
+  trabajadas, por separado para varones y para mujeres. ¿En cuál de los
+  dos grupos la asociación es más fuerte? ¿Los intervalos de confianza
+  se superponen?
 
 ## De tarea
 
-- Hacer un gráfico boxplot de la distribución de edades de los
-  asalariados con descuento jubilatorio, y de los asalariados sin
-  descuento jubilatorio.
+- **Composición del ingreso por quintil.** Usando las variables de
+  fuentes de ingreso construidas en la clase (`itl`, `i_polsoc`,
+  `i_otros_nolab`), armar quintiles del **ingreso total individual**
+  (`P47T`, con su ponderador `PONDII`) y graficar qué parte del ingreso
+  de cada quintil proviene de cada fuente. ¿Dónde pesan más las
+  políticas sociales?
 
-- Uniendo las bases de los distintos trimestres, calcular el porcentaje
-  de asalariados sin descuento jubilatorio como
-  $\frac{Asal.\ s/\ desc\ jubil}{Asal.\ c/\ desc\ jubil + Asal.\ s/\ desc\ jubil}$.
-  Luego realizar un gráfico de línea con la evolución de este indicador.
+- **Lorenz con ingreso total.** Repetir la curva de Lorenz y el Gini por
+  sexo, pero con `P47T` en lugar de `P21` (sobre todas las personas con
+  ingreso total positivo). ¿La distancia entre varones y mujeres se
+  achica o se agranda respecto de la que vimos con el ingreso laboral?
 
 ## Bibliografía {.unnumbered}
 
