@@ -1,54 +1,27 @@
 ---
-title: "Pobreza multidimensional"
+title: "Pobreza multidimensional: NBI y método combinado"
 ---
 
 # Introducción
 
-## Presentación de la clase
+En esta clase trabajaremos con la noción de las **Necesidades Básicas Insatisfechas (NBI)**. Es decir, a diferencia de la clase anterior, utilizaremos un **método directo** para aproximarnos al fenómeno de la pobreza. No miraremos la disponibilidad de recursos (ingresos) para satisfacer necesidades, sino directamente la existencia de carencias que pueden considerarse más "estructurales" en los hogares. 
 
-En la clase anterior medimos la pobreza por el **método indirecto**: comparamos el ingreso del hogar con el valor de una canasta y clasificamos a las personas según puedan o no adquirirla. Ese método nos dice si un hogar tiene *recursos* para satisfacer sus necesidades, pero no si efectivamente las satisface.
+Consideraremos las 5 dimensiones originalmente propuestas en la metodología NBI de INDEC (vinculadas a la calidad de la vivienda y el espacio disponible para los miembros, el acceso a servicios sanitarios, la escolarización de los menores y la capacidad de subsistencia asociada al jefe de hogar). Estas definiciones fueron originalmente elaboradas con el criterio de que tengan universalidad para aplicarse en áreas urbanas y rurales (ya que fueron pensadas para los censos, de cobertura nacional). Acá vamos a hacer una aproximación con la EPH, veremos que su indicencia en ámbitos urbanos en la actualdiad es muy baja.    
 
-En esta clase vamos a trabajar con el enfoque **directo** o **multidimensional**: en lugar de mirar el ingreso, observamos si las personas acceden o no a un conjunto de bienes, servicios y derechos considerados básicos (una vivienda adecuada, saneamiento, educación, cobertura de salud, protección social, etc.). Una persona es pobre multidimensional cuando presenta **privaciones** en esas dimensiones.
+Típicamente, se considera que un hogar tiene NBI cuando presenta **al menos una**  carencias en las dimensiones planteadas. Haremos ese ejercicio en esta clase. No obstante, la multidimensionalidad abre las puertas a la creatividad para armar tipologías o bien índices sintéticos que reflejen el grado de severidad de cada situación.
 
-Como referencia vamos a tomar la medición del **Barómetro de la Deuda Social de la Infancia** del Observatorio de la Deuda Social Argentina (ODSA-UCA), que está en la carpeta de la clase (*Trazando el camino: privaciones estructurales, avances y desafíos en los derechos de la infancia y adolescencia. Argentina 2010-2023*). Su índice tiene tres rasgos que vamos a replicar:
+Al cierre de la clase, vamos a **cruzar** el NBI con la pobreza por ingresos de la clase 6. Ese cruce se conoce como **método combinado** o **método integrado** (Katzman), y permite distinguir grupos dentro de la pobreza que cada método por separado no deja ver. Quienes tienen carencias estructurales (NBI) e ingresos insuficientes suelen llamarse *pobres estructurales* o *crónicos*. Quienes no tienen NBI pero sí ingresos por debajo de la línea son los que Minujin y Kessler llamaron *empobrecidos* (o *pobres recientes*).
 
--   **Enfoque de derechos**: las dimensiones se eligen porque remiten a derechos reconocidos (alimentación, saneamiento, vivienda, salud, información, estimulación/educación).
--   **Doble umbral**: cada dimensión se mide con un umbral **total** (privación moderada o más) y uno **severo** (privación extrema). El umbral severo es siempre más exigente: quien está privado en el umbral severo también lo está en el total.
--   **Criterio de identificación "de unión"**: una persona es pobre multidimensional si tiene **al menos una** privación. Así, ODSA estima que en 2023 el 56,3% de los niños, niñas y adolescentes era pobre multidimensional en el umbral total y el 16,1% en el umbral severo.
+Los pasos del ejercicio son los siguientes.
 
-La diferencia es que ODSA usa su propia encuesta (la EDSA), diseñada para estos fines. Nosotros vamos a **adaptar** esa lógica a la EPH, para el **total de la población**, y de manera **semestral** (primer y segundo semestre de 2025).
+1.  Levantar las bases de hogares e individuos de 2025.
+2.  Construir los tres indicadores que salen de la base de hogares (vivienda, sanitario, hacinamiento).
+3.  Construir, en la base de personas, los insumos de los otros dos indicadores (asistencia escolar y capacidad de subsistencia) y llevarlos al hogar.
+4.  Armar el índice de NBI y estimar su incidencia en hogares y personas.
+5.  Calcular la pobreza por ingresos (lo mismo que en la clase 6).
+6.  Cruzar ambas mediciones con el método combinado.
 
-Los pasos del ejercicio son:
 
-1.  Levantar las cuatro bases trimestrales de hogares e individuos de 2025 y **unirlas** con `bind_rows()`, conservando solo las columnas necesarias.
-2.  Unir la información del hogar (vivienda, saneamiento) a cada persona.
-3.  Construir los **indicadores de privación** de cada dimensión, en sus dos umbrales.
-4.  Construir el **índice** y estimar la incidencia total y severa, la **intensidad** (cuántas privaciones) y su sensibilidad al criterio de corte.
-5.  Desagregar por grupo de edad y región.
-6.  **Cruzar** la pobreza multidimensional con la pobreza por ingresos de la clase 6.
-
-## De la EDSA a la EPH: qué podemos medir
-
-La primera tarea en una medición multidimensional es **operacionalizar** las dimensiones con las variables disponibles. La EPH no fue diseñada para esto, así que algunas dimensiones del índice de ODSA no se pueden replicar y otras solo de manera parcial:
-
-| Dimensión ODSA            | ¿Se puede medir con la EPH?                                                                                  | Qué hacemos                                     |
-|----------------------|------------------------------|--------------------------|
-| Alimentación              | No. La EPH no indaga sobre inseguridad alimentaria.                                                          | Queda afuera                                    |
-| Saneamiento               | Sí: agua, baño, inodoro, desagüe (base de hogares).                                                          | **Saneamiento**                                 |
-| Vivienda                  | Sí: tipo de vivienda, materiales, hacinamiento (base de hogares).                                            | **Vivienda**                                    |
-| Salud                     | Parcialmente: hay cobertura médica, pero no consultas a médicos u odontólogos.                               | **Salud** (solo cobertura)                      |
-| Información               | No en las bases trimestrales (computadora e internet se relevan en un módulo aparte).                        | Queda afuera                                    |
-| Estimulación / Educación  | Parcialmente: asistencia y máximo nivel alcanzado.                                                           | **Educación**                                   |
-| (Hábitat: medio ambiente) | Sí: cercanía a basurales y zonas inundables.                                                                 | **Entorno** (dimensión agregada)                |
-| —                         | Al trabajar con toda la población (y no solo con niños), sumamos una dimensión clásica en índices para adultos. | **Empleo y protección social** (dimensión agregada) |
-
-Nos quedamos entonces con **seis dimensiones**: vivienda, saneamiento, entorno, salud, educación y empleo/protección social.
-
-::: {.callout-warning appearance="simple"}
-## Esto no es la medición de ODSA
-
-Lo que sigue es un ejercicio que toma la *lógica* del índice de ODSA (enfoque de derechos, doble umbral, criterio de unión) pero con otras dimensiones, otros indicadores, otra fuente y otra población. Los resultados **no son comparables** con los del Barómetro. Cada decisión que tomamos (qué indicador, qué umbral, cómo tratar la no respuesta) es discutible, y discutirla es parte del ejercicio.
-:::
 
 # Carga de paquetes y bases
 
@@ -57,640 +30,331 @@ library(tidyverse)
 library(openxlsx)
 ```
 
-## Variables de interés
+Como en la clase 6, vamos a trabajar con los cuatro trimestres de 2025 y presentar los resultados por semestre. Esta vez necesitamos **dos** bases, la de hogares (de donde salen las características de la vivienda) y la de individuos (de donde salen la edad, la asistencia escolar, el nivel educativo, la condición de actividad y los ingresos).
 
-Como vamos a levantar ocho bases (cuatro trimestres de hogares y cuatro de individuos), conviene definir antes **qué columnas necesitamos** de cada una. Así cada base que unimos es más liviana, y además nos aseguramos de que todas tengan exactamente las mismas columnas.
+En lugar de levantar cada trimestre por separado y después unirlos con `bind_rows()`, usamos `read_delim()` del paquete **readr** (parte del tidyverse). Si le pasamos un vector con varios archivos, los lee todos y los apila en un único *dataframe*. Con el argumento `col_select` nos quedamos solo con las columnas que vamos a usar.
 
 ```{r}
-# Base de HOGARES: identificación + vivienda, saneamiento y entorno
-var_hogar <- c("CODUSU", "NRO_HOGAR", "ANO4", "TRIMESTRE",
-               "IV1",            # tipo de vivienda
-               "IV3",            # material de los pisos
-               "IV4", "IV5",     # cubierta del techo y cielorraso
-               "IV6", "IV7",     # ubicación y fuente del agua
-               "IV8", "IV10",    # baño y tipo de inodoro
-               "IV11",           # desagüe del baño
-               "IV12_1", "IV12_2", # basural y zona inundable
-               "II1",            # cantidad de ambientes del hogar
-               "IX_TOT")         # cantidad de miembros del hogar
+archivos_hogar <- c("bases_eph/usu_hogar_T125.txt",
+                    "bases_eph/usu_hogar_T225.txt",
+                    "bases_eph/usu_hogar_T325.txt",
+                    "bases_eph/usu_hogar_T425.txt")
 
-# Base INDIVIDUAL: identificación + salud, educación, empleo e ingresos
+archivos_individual <- c("bases_eph/usu_individual_T125.txt",
+                         "bases_eph/usu_individual_T225.txt",
+                         "bases_eph/usu_individual_T325.txt",
+                         "bases_eph/usu_individual_T425.txt")
+
+var_hogar <- c("CODUSU", "NRO_HOGAR", "ANO4", "TRIMESTRE", "REGION", "PONDERA",
+               "IV1", "IV3", "IV4", "IV8", "II1", "IX_TOT")
+
 var_individual <- c("CODUSU", "NRO_HOGAR", "COMPONENTE", "ANO4", "TRIMESTRE",
-                    "REGION", "AGLOMERADO", "PONDERA", "PONDIH",
-                    "CH04", "CH06",                 # sexo y edad
-                    "CH08",                         # cobertura médica
-                    "CH10", "NIVEL_ED",             # asistencia y nivel educativo
-                    "ESTADO", "CAT_INAC", "EMPLEO", # condición de actividad y empleo formal
-                    "V2_01_M", "V2_02_M", "V2_03_M",# montos de jubilaciones y pensiones
-                    "ITF")                          # ingreso total familiar
+                    "REGION", "PONDERA", "PONDIH", "CH03", "CH04", "CH06",
+                    "CH10", "NIVEL_ED", "ESTADO", "ITF")
+
+hogares <- read_delim(archivos_hogar,
+                      delim = ";",
+                      locale = locale(decimal_mark = ","),
+                      col_select = all_of(var_hogar),
+                      show_col_types = FALSE)
+
+individuos <- read_delim(archivos_individual,
+                         delim = ";",
+                         locale = locale(decimal_mark = ","),
+                         col_select = all_of(var_individual),
+                         show_col_types = FALSE)
+
+hogares |> count(ANO4, TRIMESTRE) #Casos muestrales de hogares por trim
+individuos |> count(ANO4, TRIMESTRE) #Casos muestrales de individuos por trim
 ```
 
-## Unimos los cuatro trimestres con `bind_rows()`
-
-`bind_rows()` **apila** bases una debajo de la otra, haciendo coincidir las columnas por su nombre. Como cada trimestre tiene las mismas columnas (porque las seleccionamos con el mismo vector), el resultado es una única base con las filas de los cuatro trimestres. Las variables `ANO4` y `TRIMESTRE` nos permiten seguir sabiendo de qué trimestre viene cada fila.
+Cada hogar se identifica con `CODUSU` y `NRO_HOGAR`. Como tenemos cuatro trimestres apilados (y la EPH es un panel rotativo, por lo que un mismo hogar puede aparecer en más de un trimestre), la clave completa de un hogar en esta base es `ANO4`, `TRIMESTRE`, `CODUSU` y `NRO_HOGAR`. La guardamos en un vector para no repetirla.
 
 ```{r}
-hogares_2025 <- bind_rows(
-  read.table("bases_eph/usu_hogar_T125.txt", sep = ";", dec = ",",
-             header = TRUE, fill = TRUE) %>% select(all_of(var_hogar)),
-  read.table("bases_eph/usu_hogar_T225.txt", sep = ";", dec = ",",
-             header = TRUE, fill = TRUE) %>% select(all_of(var_hogar)),
-  read.table("bases_eph/usu_hogar_T325.txt", sep = ";", dec = ",",
-             header = TRUE, fill = TRUE) %>% select(all_of(var_hogar)),
-  read.table("bases_eph/usu_hogar_T425.txt", sep = ";", dec = ",",
-             header = TRUE, fill = TRUE) %>% select(all_of(var_hogar)))
-
-individual_2025 <- bind_rows(
-  read.table("bases_eph/usu_individual_T125.txt", sep = ";", dec = ",",
-             header = TRUE, fill = TRUE) %>% select(all_of(var_individual)),
-  read.table("bases_eph/usu_individual_T225.txt", sep = ";", dec = ",",
-             header = TRUE, fill = TRUE) %>% select(all_of(var_individual)),
-  read.table("bases_eph/usu_individual_T325.txt", sep = ";", dec = ",",
-             header = TRUE, fill = TRUE) %>% select(all_of(var_individual)),
-  read.table("bases_eph/usu_individual_T425.txt", sep = ";", dec = ",",
-             header = TRUE, fill = TRUE) %>% select(all_of(var_individual)))
+id_hogar <- c("ANO4", "TRIMESTRE", "CODUSU", "NRO_HOGAR")
 ```
 
-Chequeamos que estén los cuatro trimestres:
+# Los indicadores de NBI
+
+La definición histórica de NBI contempla cinco dimensiones. Las definiciones originales fueron pensadas para el Censo, así que al llevarlas a la EPH hay que adaptarlas a las preguntas disponibles.
+
+## Indicadores de la base de hogares
+
+**NBI 1. Vivienda inconveniente (Calidad).** Hogares que habitan en una pieza de inquilinato, de hotel o pensión, un local no construido para habitación u otro tipo de vivienda (es decir, que no viven en una casa o un departamento, `IV1` distinto de 1 y 2). También consideramos con vivienda inconveniente a los hogares que, aun viviendo en una casa o un departamento, tienen techo de caña, tabla o paja con barro (`IV4 == 7`) o piso de ladrillo suelto o tierra (`IV3 == 3`).
+
+**NBI 2. Carencias sanitarias.** Hogares que no tienen baño ni letrina (`IV8` distinto de 1).
+
+**NBI 3. Hacinamiento.** Relación entre la cantidad de miembros del hogar (`IX_TOT`) y la cantidad de habitaciones de uso exclusivo (`II1`). Se considera que hay hacinamiento crítico cuando hay 3 o más personas por cuarto. 
+
+Las tres variables se construyen con `mutate()` y `case_when()`, igual que la situación de pobreza en la clase anterior. El `.default` de `case_when()` es el valor que toman los casos que no cumplen ninguna de las condiciones anteriores.
 
 ```{r}
-hogares_2025 %>% count(ANO4, TRIMESTRE)
-
-individual_2025 %>% count(ANO4, TRIMESTRE)
-```
-
-## Unimos hogares e individuos
-
-La unidad de análisis va a ser la **persona** (queremos saber qué porcentaje de la población es pobre multidimensional), pero buena parte de la información (vivienda, saneamiento, entorno) está en la base de **hogares**. Por eso le pegamos a cada persona las características de su hogar con un `left_join()`.
-
-El hogar se identifica con `CODUSU` + `NRO_HOGAR`, pero como ahora tenemos varios trimestres apilados, también hay que usar `ANO4` y `TRIMESTRE` como llave: el mismo hogar puede haber sido encuestado en más de un trimestre.
-
-```{r}
-dic_regiones <- read.xlsx("bases_eph/Aglomerados y Regiones EPH.xlsx",
-                          sheet = "Regiones EPH", startRow = 2)
-
-base_2025 <- individual_2025 %>%
-  left_join(hogares_2025, by = c("CODUSU", "NRO_HOGAR", "ANO4", "TRIMESTRE")) %>%
-  left_join(dic_regiones, by = "REGION") %>%
-  mutate(SEMESTRE = if_else(TRIMESTRE %in% c(1, 2),
-                            "1er semestre 2025",
-                            "2do semestre 2025"))
-```
-
-Un chequeo útil después de cualquier *join*: ¿quedó alguna persona sin la información de su hogar?
-
-```{r}
-base_2025 %>%
-  summarise(personas = n(),
-            sin_datos_hogar = sum(is.na(IX_TOT)))
-```
-
-::: {.callout-note appearance="simple"}
-## ¿Qué significa estimar para un semestre?
-
-Al apilar dos trimestres y calcular un porcentaje con `PONDERA`, cada trimestre "pesa" lo mismo (los ponderadores de cada trimestre suman la población total). El resultado es, en la práctica, el **promedio de los dos trimestres**. Así es como INDEC publica la pobreza por ingresos de manera semestral.
-
-Por el esquema de rotación de la EPH, una parte de los hogares aparece en los dos trimestres de un mismo semestre. Para estimar porcentajes esto no es un problema; sí lo sería si quisiéramos seguir a los hogares en el tiempo (paneles), que no es el objetivo de esta clase.
-:::
-
-# Construcción de las dimensiones
-
-Para cada dimensión vamos a crear **dos variables dummy**: una para el umbral total (`_total`) y otra para el umbral severo (`_sev`), que valen 1 si la persona está privada y 0 si no lo está. Igual que en la clase de calidad del empleo, con `missing = 0` decidimos explícitamente tratar la **no respuesta** como "privación ausente". Es una decisión conservadora: tiende a subestimar las privaciones.
-
-## Información a nivel hogar
-
-Algunas privaciones se definen mirando a **todos los miembros del hogar**: por ejemplo, si *alguien* en el hogar tiene un empleo formal. Para eso agrupamos por hogar y usamos `any()` (¿algún miembro cumple la condición?) y `all()` (¿todos la cumplen?). Como usamos `mutate()` y no `summarise()`, el resultado se le asigna a cada persona del hogar sin perder la estructura individual de la base.
-
-```{r}
-base_2025 <- base_2025 %>%
-  group_by(CODUSU, NRO_HOGAR, ANO4, TRIMESTRE) %>%
+hogares_nbi <- hogares |>
   mutate(
-    # ¿Ningún miembro tiene cobertura de salud?
-    hogar_sin_cobertura = all(CH08 == 4, na.rm = TRUE),
-    # ¿Hay al menos un ocupado?
-    hay_ocupado    = any(ESTADO == 1, na.rm = TRUE),
-    # ¿Hay al menos un ocupado con empleo formal? (variable EMPLEO, clase 4)
-    hay_formal     = any(ESTADO == 1 & EMPLEO == 1, na.rm = TRUE),
-    # ¿Hay al menos un jubilado o pensionado?
-    hay_jubilacion = any(CAT_INAC == 1 | V2_01_M > 0 | V2_02_M > 0 | V2_03_M > 0,
-                         na.rm = TRUE)) %>%
-  ungroup()
+    nbi_1 = case_when(!IV1 %in% c(1, 2)   ~ 1,
+                      IV4 == 7 | IV3 == 3 ~ 1,
+                      .default = 0),
+    nbi_2 = case_when(IV8 == 1 ~ 0,
+                      .default = 1),
+    cuartos = if_else(II1 == 0, 1, II1),
+    personas_por_cuarto = IX_TOT / cuartos,
+    nbi_3 = case_when(personas_por_cuarto >= 3 ~ 1,
+                      .default = 0)
+  )
+
+hogares_nbi |> 
+  group_by(ANO4, TRIMESTRE) |> 
+  summarise(tasa_hogares_nbi_1 = weighted.mean(nbi_1,PONDERA))
+
+hogares_nbi |> 
+  group_by(ANO4, TRIMESTRE) |> 
+  summarise(tasa_hogares_nbi_2 = weighted.mean(nbi_2,PONDERA))
+
+hogares_nbi |> 
+  group_by(ANO4, TRIMESTRE) |> 
+  summarise(tasa_hogares_nbi_3 = weighted.mean(nbi_3,PONDERA))
+
 ```
 
-## 1. Vivienda
+## Indicadores que se construyen con datos de las personas
 
-| Umbral | Privación                                                                                                                                                                                                                                                    |
-|---------------|---------------------------------------------------------|
-| Total  | Hacinamiento (**más de 2** personas por cuarto), **o** vivienda inconveniente (pieza de inquilinato u hotel, local no construido para habitación, otros), **o** piso de ladrillo suelto o tierra, **o** techo de cartón, caña o paja, **o** techo de chapa sin cielorraso |
-| Severo | Hacinamiento crítico (**más de 3** personas por cuarto), **o** local no construido para habitación, **o** piso de ladrillo suelto o tierra, **o** techo de cartón, caña o paja                                                                                  |
+Los otros dos indicadores dependen de características de **los miembros** del hogar, así que primero los construimos en la base de individuos y después los llevamos al hogar.
 
-El corte de hacinamiento crítico (más de 3 personas por cuarto) es el que usa INDEC para las Necesidades Básicas Insatisfechas (NBI). Calculamos las personas por cuarto con la cantidad de miembros (`IX_TOT`) sobre los ambientes de uso exclusivo del hogar (`II1`); los casos con 0 ambientes o sin respuesta (99) quedan como `NA`.
+**NBI 4. Inasistencia escolar.** Hogares con al menos un niño o niña en edad escolar (6 a 12 años) que no asiste a la escuela. En la base de personas marcamos a cada chico de 6 a 12 años que no asiste (`CH10` distinto de 1).
+
+**NBI 5. Capacidad de subsistencia.** Hogares con cuatro o más personas por miembro ocupado y cuyo jefe no completó el tercer grado de la primaria. Necesitamos tres insumos por persona, si está ocupada (`ESTADO == 1`), si es jefe o jefa de hogar (`CH03 == 1`) y su nivel educativo. Como la EPH no tiene una variable que indique directamente el último grado aprobado, vamos a definir que un jefe con baja educación (jefe_beduc) como aquel con nivel educativo de primario completo o menor (`NIVEL_ED <3`).
 
 ```{r}
-base_2025 <- base_2025 %>%
+individuos_nbi <- individuos |>
   mutate(
-    personas_cuarto = if_else(II1 %in% 1:98, IX_TOT / II1, NA_real_),
-
-    viv_total = if_else(personas_cuarto > 2 |
-                          IV1 %in% 3:6 |
-                          IV3 == 3 |
-                          IV4 %in% 6:7 |
-                          (IV4 %in% 4:5 & IV5 == 2),
-                        1, 0, missing = 0),
-
-    viv_sev   = if_else(personas_cuarto > 3 |
-                          IV1 == 5 |
-                          IV3 == 3 |
-                          IV4 %in% 6:7,
-                        1, 0, missing = 0))
+    nn_612_noasiste = case_when(CH06 >= 6 & CH06 <= 12 & CH10 != 1 ~ 1,
+                                .default = 0),
+    ocupado = case_when(ESTADO == 1 ~ 1,
+                        .default = 0),
+    jefe_beduc = case_when(CH03 == 1 & NIVEL_ED <3 ~ 1,
+                           .default = 0)
+  )
 ```
 
-::: {.callout-note appearance="simple"}
-## `NA` en condiciones combinadas con `|`
-
-Si `personas_cuarto` es `NA`, la comparación `personas_cuarto > 2` da `NA`. Pero R es razonable con el "o" lógico: `NA | TRUE` da `TRUE` (si alguna otra condición se cumple, la persona está privada igual) y `NA | FALSE` da `NA`, que con `missing = 0` termina siendo 0.
-:::
-
-## 2. Saneamiento
-
-| Umbral | Privación                                                                                                                                                     |
-|----------------|--------------------------------------------------------|
-| Total  | Sin agua por cañería dentro de la vivienda, **o** agua que no es de red pública, **o** sin inodoro con descarga (botón/mochila/cadena), **o** desagüe que no va a red cloacal |
-| Severo | Agua fuera del terreno, **o** sin baño, **o** letrina (sin arrastre de agua), **o** desagüe a hoyo o excavación en la tierra                                     |
-
-El umbral total sigue de cerca la definición de ODSA ("viviendas que no tienen cloacas o agua corriente o inodoro con descarga").
+Ahora resumimos esa información **a nivel hogar** con `group_by()` y `summarise()`. Para cada hogar contamos los miembros con `n()`, sumamos los ocupados, y con `max()` vemos si *alguno* de los miembros cumple la condición (si al menos uno tiene un 1, el máximo es 1).
 
 ```{r}
-base_2025 <- base_2025 %>%
-  mutate(
-    san_total = if_else(IV6 != 1 |
-                          IV7 != 1 |
-                          IV8 == 2 |
-                          IV10 %in% 2:3 |
-                          IV11 %in% 2:4,
-                        1, 0, missing = 0),
-
-    san_sev   = if_else(IV6 == 3 |
-                          IV8 == 2 |
-                          IV10 == 3 |
-                          IV11 == 4,
-                        1, 0, missing = 0))
-```
-
-## 3. Entorno
-
-| Umbral | Privación                                                                          |
-|---------------|---------------------------------------------------------|
-| Total  | Vivienda a 3 cuadras o menos de un basural, **o** en zona inundable (últimos 12 meses) |
-| Severo | Las **dos** condiciones a la vez                                                   |
-
-```{r}
-base_2025 <- base_2025 %>%
-  mutate(
-    ent_total = if_else(IV12_1 == 1 | IV12_2 == 1, 1, 0, missing = 0),
-    ent_sev   = if_else(IV12_1 == 1 & IV12_2 == 1, 1, 0, missing = 0))
-```
-
-## 4. Salud
-
-| Umbral | Privación                                                                    |
-|---------------|---------------------------------------------------------|
-| Total  | La persona no tiene obra social, prepaga, mutual ni plan público de salud (`CH08 == 4`) |
-| Severo | **Ningún miembro** del hogar tiene cobertura                                 |
-
-La EPH no pregunta por consultas médicas, así que solo podemos aproximar el **acceso** a través de la cobertura. El umbral severo identifica a los hogares completamente desprotegidos, que dependen exclusivamente del sistema público.
-
-```{r}
-base_2025 <- base_2025 %>%
-  mutate(
-    sal_total = if_else(CH08 == 4, 1, 0, missing = 0),
-    sal_sev   = if_else(hogar_sin_cobertura, 1, 0, missing = 0))
-```
-
-## 5. Educación
-
-Esta dimensión se evalúa según la edad de cada persona, porque lo que se considera un déficit depende de la etapa de la vida. Para los adultos usamos un **criterio de cohorte**: exigimos el secundario completo solo a quienes estaban en edad escolar cuando se sancionó su obligatoriedad (Ley de Educación Nacional 26.206, de fines de 2006). Aproximamos el año de nacimiento como `ANO4 - CH06`.
-
-| Grupo                              | Umbral total                                         | Umbral severo                                         |
-|------------------|---------------------------|----------------------------|
-| 0 a 3 años                         | No se evalúa                                         | No se evalúa                                          |
-| 4 a 17 años                        | No asiste a un establecimiento educativo (y no completó el secundario) | No asiste y no completó el primario |
-| 18 años y más, nacidos desde 1989  | Sin secundario completo                              | Sin primario completo                                 |
-| 18 años y más, nacidos antes de 1989 | Sin primario completo                              | Sin primario completo                                 |
-
-```{r}
-base_2025 <- base_2025 %>%
-  mutate(
-    anio_nacimiento = ANO4 - CH06,
-
-    edu_total = case_when(
-      CH06 %in% 4:17 ~ if_else(CH10 != 1 & NIVEL_ED %in% c(1, 2, 3, 7), 1, 0, missing = 0),
-      CH06 >= 18 & anio_nacimiento >= 1989 ~ if_else(NIVEL_ED %in% c(1, 2, 3, 7), 1, 0),
-      CH06 >= 18 & anio_nacimiento <  1989 ~ if_else(NIVEL_ED %in% c(1, 7), 1, 0),
-      TRUE ~ 0),
-
-    edu_sev = case_when(
-      CH06 %in% 4:17 ~ if_else(CH10 != 1 & NIVEL_ED %in% c(1, 7), 1, 0, missing = 0),
-      CH06 >= 18     ~ if_else(NIVEL_ED %in% c(1, 7), 1, 0),
-      TRUE ~ 0))
-```
-
-::: {.callout-note appearance="simple"}
-## Recordatorio de códigos de `NIVEL_ED`
-
-1 = Primario incompleto (incluye educación especial) · 2 = Primario completo · 3 = Secundario incompleto · 4 = Secundario completo · 5 = Superior incompleto · 6 = Superior completo · 7 = Sin instrucción · 9 = Ns/Nr. Notá que la educación especial queda dentro de "primario incompleto": otra decisión discutible que hereda nuestro indicador.
-:::
-
-## 6. Empleo y protección social
-
-| Umbral | Privación                                                                                         |
-|---------------|---------------------------------------------------------|
-| Total  | En el hogar **nadie** tiene un empleo formal **ni** percibe jubilación o pensión                 |
-| Severo | En el hogar **nadie** está ocupado **ni** percibe jubilación o pensión                           |
-
-La idea es captar si el hogar tiene alguna inserción en el sistema de **protección social contributivo o previsional**. En el umbral severo el hogar no tiene ningún ingreso laboral ni previsional, y depende de transferencias, ayudas u otras fuentes. Para el empleo formal usamos la variable `EMPLEO`, que vimos en la clase 4. Las pensiones no contributivas (`V2_03_M`) cuentan como protección.
-
-```{r}
-base_2025 <- base_2025 %>%
-  mutate(
-    emp_total = if_else(!hay_formal  & !hay_jubilacion, 1, 0, missing = 0),
-    emp_sev   = if_else(!hay_ocupado & !hay_jubilacion, 1, 0, missing = 0))
-```
-
-# El índice de pobreza multidimensional
-
-## Identificación: ¿quién es pobre?
-
-Sumamos las privaciones de cada persona en cada umbral. Con el **criterio de unión** de ODSA, una persona es pobre multidimensional si tiene **al menos una** privación.
-
-```{r}
-base_md <- base_2025 %>%
-  mutate(
-    n_priv_total = viv_total + san_total + ent_total + sal_total + edu_total + emp_total,
-    n_priv_sev   = viv_sev   + san_sev   + ent_sev   + sal_sev   + edu_sev   + emp_sev,
-
-    pmd_total = if_else(n_priv_total >= 1, 1, 0),
-    pmd_sev   = if_else(n_priv_sev   >= 1, 1, 0))
-```
-
-## Agregación: incidencia por semestre
-
-Como las privaciones son variables 0/1, su **media ponderada** es directamente la proporción de personas privadas. Por eso podemos usar `weighted.mean()` con `PONDERA` como ponderador, que es más corto que sumar ponderadores con condiciones como hicimos en la clase 6 (el resultado es el mismo).
-
-```{r}
-incidencia <- base_md %>%
-  group_by(SEMESTRE) %>%
-  summarise(
-    `Umbral total`  = round(weighted.mean(pmd_total, PONDERA) * 100, 1),
-    `Umbral severo` = round(weighted.mean(pmd_sev,   PONDERA) * 100, 1))
-
-incidencia
-```
-
-## Incidencia de cada dimensión
-
-Para tener una tabla de privaciones por dimensión (como la Tabla A.3 de ODSA) conviene pasar la base a **formato largo**: una fila por persona, dimensión y umbral. El nombre de cada variable ya tiene las dos informaciones separadas por un guion bajo (`viv_total`, `viv_sev`), así que `pivot_longer()` puede separarlas con `names_sep`.
-
-```{r}
-dimensiones <- c("viv_total", "viv_sev", "san_total", "san_sev",
-                 "ent_total", "ent_sev", "sal_total", "sal_sev",
-                 "edu_total", "edu_sev", "emp_total", "emp_sev")
-
-nombres_dim <- c(viv = "Vivienda", san = "Saneamiento", ent = "Entorno",
-                 sal = "Salud",    edu = "Educación",   emp = "Empleo y protección social")
-
-privaciones <- base_md %>%
-  select(SEMESTRE, PONDERA, all_of(dimensiones)) %>%
-  pivot_longer(cols = all_of(dimensiones),
-               names_to  = c("dimension", "umbral"),
-               names_sep = "_",
-               values_to = "privado") %>%
-  group_by(SEMESTRE, dimension, umbral) %>%
-  summarise(incidencia = weighted.mean(privado, PONDERA) * 100,
-            .groups = "drop") %>%
-  mutate(dimension = factor(nombres_dim[dimension], levels = nombres_dim),
-         umbral    = if_else(umbral == "total", "Umbral total", "Umbral severo"))
-
-privaciones %>%
-  mutate(incidencia = round(incidencia, 1)) %>%
-  pivot_wider(names_from = c(umbral, SEMESTRE), values_from = incidencia,
-              names_sep = " - ") %>%
-  arrange(dimension)
-```
-
-Replicamos el formato de los gráficos de ODSA (Figuras A.2): la barra completa es la incidencia en el umbral total, y la parte oscura, la que corresponde al umbral severo.
-
-```{r}
-#| fig-height: 6
-privaciones %>%
-  pivot_wider(names_from = umbral, values_from = incidencia) %>%
-  mutate(`Solo umbral total` = `Umbral total` - `Umbral severo`) %>%
-  select(-`Umbral total`) %>%
-  pivot_longer(cols = c(`Umbral severo`, `Solo umbral total`),
-               names_to = "tramo", values_to = "incidencia") %>%
-  mutate(tramo = factor(tramo, levels = c("Solo umbral total", "Umbral severo"))) %>%
-  ggplot(aes(x = fct_rev(dimension), y = incidencia, fill = tramo)) +
-  geom_col(width = 0.7) +
-  facet_wrap(~SEMESTRE) +
-  scale_fill_manual(values = c("Solo umbral total" = "#9fd3c7",
-                               "Umbral severo"     = "#1b7f79")) +
-  coord_flip() +
-  labs(title = "Incidencia de las privaciones según dimensión y umbral",
-       subtitle = "En porcentaje de la población. Total 31 aglomerados urbanos.",
-       x = NULL, y = "%", fill = NULL,
-       caption = "Fuente: elaboración propia en base a EPH-INDEC.") +
-  theme_minimal() +
-  theme(legend.position = "bottom")
-```
-
-::: {.callout-tip appearance="simple"}
-## Para discutir
-
-¿Qué dimensiones "empujan" la incidencia del umbral total? Con el criterio de unión, alcanza con **una** dimensión muy extendida para que el índice sea alto. Pensá qué pasaría si en saneamiento no contáramos como privación el desagüe a cámara séptica, que en muchas ciudades del interior es la norma.
-
-En el umbral severo, en cambio, casi todo el peso lo tiene **salud** (hogares sin ninguna cobertura). ¿Es razonable considerar "severa" esa privación, cuando el sistema público de salud es universal y gratuito? ¿Qué otro indicador de la EPH podría usarse?
-:::
-
-## Intensidad: ¿cuántas privaciones?
-
-La incidencia no dice nada sobre **cuán pobres** son los pobres: con el criterio de unión, una persona con una privación y otra con cinco cuentan igual. Miremos la distribución de la población según la cantidad de privaciones (umbral total).
-
-```{r}
-intensidad <- base_md %>%
-  group_by(SEMESTRE, n_priv_total) %>%
-  summarise(poblacion = sum(PONDERA), .groups = "drop_last") %>%
-  mutate(porcentaje = round(poblacion / sum(poblacion) * 100, 1)) %>%
-  ungroup()
-
-intensidad %>%
-  select(-poblacion) %>%
-  pivot_wider(names_from = SEMESTRE, values_from = porcentaje)
-```
-
-```{r}
-ggplot(intensidad, aes(x = factor(n_priv_total), y = porcentaje, fill = SEMESTRE)) +
-  geom_col(position = "dodge") +
-  scale_fill_manual(values = c("#9fd3c7", "#1b7f79")) +
-  labs(title = "Población según cantidad de privaciones (umbral total)",
-       x = "Cantidad de dimensiones con privación", y = "%", fill = NULL,
-       caption = "Fuente: elaboración propia en base a EPH-INDEC.") +
-  theme_minimal() +
-  theme(legend.position = "bottom")
-```
-
-## Sensibilidad al criterio de corte
-
-El criterio de unión (k = 1) es el más amplio posible. En el otro extremo está el **criterio de intersección**: ser pobre solo si se está privado en **todas** las dimensiones (k = 6). El método de **Alkire y Foster** (que usa, por ejemplo, el Índice de Pobreza Multidimensional global de PNUD-OPHI) propone un corte intermedio *k*: es pobre quien tiene al menos *k* privaciones.
-
-Para ver cómo cambia la incidencia con distintos *k*, usamos `expand_grid()`, que repite cada fila de la base para cada valor de *k*. (Ojo: la función parecida `crossing()` además elimina las filas duplicadas, y en una base de microdatos dos personas distintas pueden tener valores idénticos en las columnas seleccionadas.)
-
-```{r}
-sensibilidad <- base_md %>%
-  select(SEMESTRE, PONDERA, n_priv_total, n_priv_sev) %>%
-  expand_grid(k = 1:6) %>%
-  group_by(SEMESTRE, k) %>%
-  summarise(`Umbral total`  = weighted.mean(n_priv_total >= k, PONDERA) * 100,
-            `Umbral severo` = weighted.mean(n_priv_sev   >= k, PONDERA) * 100,
+hogares_desde_personas <- individuos_nbi |>
+  group_by(ANO4, TRIMESTRE, CODUSU, NRO_HOGAR) |>
+  summarise(numcomp       = n(),
+            numocup       = sum(ocupado),
+            h_jef_beduc   = max(jefe_beduc),
+            h_nn_noasiste = max(nn_612_noasiste),
             .groups = "drop")
 
-sensibilidad %>%
-  mutate(across(c(`Umbral total`, `Umbral severo`), ~ round(.x, 1)))
+hogares_desde_personas
 ```
+
+Con esa tabla ya podemos definir los dos indicadores que faltan.
 
 ```{r}
-sensibilidad %>%
-  pivot_longer(cols = c(`Umbral total`, `Umbral severo`),
-               names_to = "umbral", values_to = "incidencia") %>%
-  ggplot(aes(x = k, y = incidencia, color = umbral, linetype = SEMESTRE)) +
-  geom_line() +
-  geom_point() +
-  scale_x_continuous(breaks = 1:6) +
-  scale_color_manual(values = c("Umbral total" = "#9fd3c7", "Umbral severo" = "#1b7f79")) +
-  labs(title = "Incidencia de la pobreza multidimensional según el corte k",
-       x = "Cantidad mínima de privaciones para ser pobre (k)", y = "%",
-       color = NULL, linetype = NULL,
-       caption = "Fuente: elaboración propia en base a EPH-INDEC.") +
-  theme_minimal()
+hogares_desde_personas <- hogares_desde_personas |>
+  mutate(
+    nbi_4 = h_nn_noasiste,
+    nbi_5 = case_when(numocup > 0 & numcomp / numocup >= 4 & h_jef_beduc == 1 ~ 1,
+                      .default = 0)
+  )
 ```
 
-::: {.callout-note appearance="simple"}
-## Incidencia, intensidad y M0
+::: {.callout-warning appearance="simple"}
+## ¿Y los hogares sin ocupados?
 
-Alkire y Foster combinan las dos informaciones en un solo número, la **tasa de recuento ajustada**: **M0 = H × A**, donde **H** es la incidencia (proporción de pobres) y **A** la intensidad (proporción promedio de dimensiones en las que están privados los pobres). A diferencia de H, M0 baja si los pobres pasan a tener menos privaciones aunque sigan siendo pobres.
+El problema de esta dimensión es que no tiene sentido en todos los hogares. Hay un número importante de hogares compuestos sólo por adultos mayores (jubilados). Por ende, la pregunta por la relación entre los ocupados (0) y el total de miembros del hogar se vuelve irrelevante.
+
+Más allá de eso, si lo queremos construir debemos agregar la condición `numocup > 0`, de modo que los hogares sin ningún ocupado quedan con `nbi_5 = 0`. Hay que escribirlo explícitamente porque en R `5 / 0` da `Inf` (infinito), que es mayor o igual a 4. Sin esa condición, todos los hogares sin ocupados con jefe de primario incompleto pasarían a tener NBI 5.
 :::
 
-```{r}
-alkire_foster <- base_md %>%
-  select(SEMESTRE, PONDERA, n_priv_total) %>%
-  expand_grid(k = 1:3) %>%
-  mutate(pobre = n_priv_total >= k,
-         proporcion_privaciones = n_priv_total / 6) %>%
-  group_by(SEMESTRE, k) %>%
-  summarise(H  = weighted.mean(pobre, PONDERA),
-            A  = weighted.mean(proporcion_privaciones[pobre], PONDERA[pobre]),
-            M0 = H * A,
-            .groups = "drop") %>%
-  mutate(across(c(H, A, M0), ~ round(.x, 3)))
+## Unir todo y armar el índice
 
-alkire_foster
-```
+Unimos los indicadores construidos desde las personas a la base de hogares con `left_join()`, usando la clave del hogar. Después construimos dos variables resumen.
 
-# Desagregaciones
-
-Igual que en la clase 6, para desagregar alcanza con agregar la variable al `group_by()`.
-
-## Por grupo de edad
+-   `cant_nbi`, la **cantidad** de NBI que tiene el hogar (de 0 a 5). Nos dice qué tan intensa es la privación.
+-   `h_nbi_con5`, el **índice** con los cinco indicadores, que vale 1 si el hogar tiene al menos una NBI.
 
 ```{r}
-base_md <- base_md %>%
-  mutate(grupo_edad = factor(
-    case_when(CH06 <= 17 ~ "0 a 17 años",
-              CH06 <= 29 ~ "18 a 29 años",
-              CH06 <= 64 ~ "30 a 64 años",
-              TRUE       ~ "65 años y más"),
-    levels = c("0 a 17 años", "18 a 29 años", "30 a 64 años", "65 años y más")))
-
-base_md %>%
-  group_by(SEMESTRE, grupo_edad) %>%
-  summarise(total  = round(weighted.mean(pmd_total, PONDERA) * 100, 1),
-            severo = round(weighted.mean(pmd_sev,   PONDERA) * 100, 1),
-            .groups = "drop") %>%
-  pivot_wider(names_from = SEMESTRE, values_from = c(total, severo))
+hogares_nbi <- hogares_nbi |>
+  left_join(hogares_desde_personas, by = id_hogar) |>
+  mutate(cant_nbi  = nbi_1 + nbi_2 + nbi_3 + nbi_4 + nbi_5,
+         h_nbi_con5 = if_else(cant_nbi >= 1, 1, 0))
 ```
 
-La infantilización de la pobreza que muestra la pobreza por ingresos, ¿aparece también en la medición multidimensional? ¿En qué dimensiones están más privadas las personas mayores?
-
-## Por región
+Por lo mencionado anteriormente, el índice con el que vamos a trabajar de acá en adelante **deja afuera el NBI 5**. Lo llamamos `h_nbi` y se construye con los indicadores 1 a 4.
 
 ```{r}
-pmd_region <- base_md %>%
-  group_by(SEMESTRE, Region) %>%
-  summarise(`Umbral total`  = weighted.mean(pmd_total, PONDERA) * 100,
-            `Umbral severo` = weighted.mean(pmd_sev,   PONDERA) * 100,
-            .groups = "drop")
+hogares_nbi <- hogares_nbi |>
+  mutate(h_nbi = if_else(nbi_1 + nbi_2 + nbi_3 + nbi_4 >= 1, 1, 0))
 
-pmd_region %>%
-  mutate(across(c(`Umbral total`, `Umbral severo`), ~ round(.x, 1)))
+hogares_nbi |>
+  select(all_of(id_hogar), nbi_1:nbi_3, nbi_4, nbi_5, cant_nbi, h_nbi_con5, h_nbi) |>
+  head(10)
 ```
+
+# Resultados del NBI
+
+Para presentar resultados semestrales agregamos una variable que identifique el semestre, igual que en la clase 6.
 
 ```{r}
-pmd_region %>%
-  pivot_longer(cols = c(`Umbral total`, `Umbral severo`),
-               names_to = "umbral", values_to = "incidencia") %>%
-  mutate(umbral = factor(umbral, levels = c("Umbral total", "Umbral severo"))) %>%
-  ggplot(aes(x = reorder(Region, incidencia), y = incidencia, fill = SEMESTRE)) +
-  geom_col(position = "dodge") +
-  facet_wrap(~umbral, scales = "free_x") +
-  scale_fill_manual(values = c("#9fd3c7", "#1b7f79")) +
-  coord_flip() +
-  labs(title = "Pobreza multidimensional por región",
-       x = NULL, y = "%", fill = NULL,
-       caption = "Fuente: elaboración propia en base a EPH-INDEC.") +
-  theme_minimal() +
-  theme(legend.position = "bottom")
+hogares_nbi <- hogares_nbi |>
+  mutate(Semestre = case_when(TRIMESTRE %in% 1:2 ~ 1,
+                              TRIMESTRE %in% 3:4 ~ 2),
+         Anio.Semestre = paste(ANO4, Semestre, sep = "."))
 ```
 
-# Pobreza multidimensional y pobreza por ingresos
+## Incidencia en hogares
 
-## Pobreza por ingresos (repaso de la clase 6)
+Como `h_nbi` vale 0 o 1, su **promedio ponderado** es directamente la proporción de hogares con NBI. Usamos `weighted.mean()` con el ponderador `PONDERA` (el NBI no usa ingresos, así que no hace falta `PONDIH`).
 
-Recalculamos la pobreza por ingresos siguiendo los mismos pasos de la clase anterior. Como trabajamos con todo 2025, nos quedamos con las canastas de ese año y las promediamos por trimestre.
+```{r}
+hogares_nbi |>
+  group_by(Anio.Semestre) |>
+  summarise(hogares_nbi_con5 = weighted.mean(h_nbi_con5, PONDERA),
+            hogares_nbi      = weighted.mean(h_nbi, PONDERA))
+```
+
+Para ver el peso de cada indicador conviene pasar la base a formato largo con `pivot_longer()`, de modo que cada indicador quede en una fila y podamos resumirlos todos juntos.
+
+```{r}
+nbi_por_indicador <- hogares_nbi |>
+  pivot_longer(cols = c(nbi_1, nbi_2, nbi_3, nbi_4, nbi_5, h_nbi),
+               names_to = "indicador",
+               values_to = "valor") |>
+  group_by(Anio.Semestre, indicador) |>
+  summarise(prop_hogares = weighted.mean(valor, PONDERA), .groups = "drop") |>
+  pivot_wider(names_from = Anio.Semestre, values_from = prop_hogares)
+
+nbi_por_indicador
+```
+
+## Intensidad. ¿Cuántas NBI tienen los hogares?
+
+El índice "de unión" trata igual a un hogar con una sola carencia que a uno con cuatro. La variable `cant_nbi` nos deja ver cómo se distribuyen los hogares según la cantidad de privaciones (acá usamos los cuatro indicadores del índice final).
+
+```{r}
+hogares_nbi |>
+  mutate(cant_nbi_1a4 = nbi_1 + nbi_2 + nbi_3 + nbi_4) |>
+  group_by(Anio.Semestre, cant_nbi_1a4) |>
+  summarise(hogares = sum(PONDERA), .groups = "drop_last") |>
+  mutate(prop = hogares / sum(hogares))
+```
+
+Casi todos los hogares con NBI tienen **una sola** carencia. Si en lugar del criterio "al menos una" usáramos "al menos dos" (por ejemplo, la lógica que utiliza el IPM del SIEMPRO), la incidencia caería a valores mínimos.
+
+## Incidencia en personas
+
+Para expresar el NBI en **personas** llevamos el indicador del hogar a cada uno de sus miembros con un `left_join()` a la base de individuos, y ponderamos con el `PONDERA` de la base individual.
+
+```{r}
+personas_nbi <- individuos |>
+  left_join(hogares_nbi |> select(all_of(id_hogar), Anio.Semestre,
+                                  nbi_1:nbi_3, nbi_4, nbi_5, h_nbi),
+            by = id_hogar)
+
+personas_nbi |>
+  group_by(Anio.Semestre) |>
+  summarise(personas_nbi = weighted.mean(h_nbi, PONDERA))
+```
+
+La incidencia en personas es mayor que en hogares porque los hogares con NBI son, en promedio, más numerosos.
+
+# Pobreza por ingresos
+
+Para el cruce necesitamos la situación de pobreza de cada persona. Repetimos, de manera compacta, el procedimiento de la clase 6 (canastas trimestrales por región, adulto equivalente del hogar y comparación del ITF con la CBT).
 
 ```{r}
 adequi <- read.xlsx("bases_eph/ADEQUI.xlsx")
-CBA    <- read.xlsx("bases_eph/canastas_eph.xlsx", sheet = "CBA") %>% mutate(Canasta = "CBA")
-CBT    <- read.xlsx("bases_eph/canastas_eph.xlsx", sheet = "CBT") %>% mutate(Canasta = "CBT")
+CBA    <- read.xlsx("bases_eph/canastas_eph.xlsx", sheet = "CBA")
+CBT    <- read.xlsx("bases_eph/canastas_eph.xlsx", sheet = "CBT")
+dic.regiones <- read.xlsx("bases_eph/Aglomerados y Regiones EPH.xlsx",
+                          sheet = "Regiones EPH",
+                          startRow = 2)
 
-canastas_trim <- bind_rows(CBA, CBT) %>%
-  filter(Anio == 2025) %>%
-  pivot_longer(cols = 3:8, names_to = "Region", values_to = "Valor") %>%
-  mutate(TRIMESTRE = case_when(Mes %in% 1:3   ~ 1,
+Canastas_Reg <- bind_rows(CBA |> mutate(Canasta = "CBA"),
+                          CBT |> mutate(Canasta = "CBT")) |>
+  pivot_longer(cols = 3:8, names_to = "Region", values_to = "Valor") |>
+  mutate(Trimestre = case_when(Mes %in% 1:3   ~ 1,
                                Mes %in% 4:6   ~ 2,
                                Mes %in% 7:9   ~ 3,
-                               Mes %in% 10:12 ~ 4)) %>%
-  group_by(Canasta, Region, TRIMESTRE) %>%
-  summarise(Valor = mean(Valor), .groups = "drop") %>%
-  pivot_wider(names_from = Canasta, values_from = Valor)
+                               Mes %in% 10:12 ~ 4),
+         Periodo = paste(Anio, Trimestre, sep = ".")) |>
+  group_by(Canasta, Region, Periodo) |>
+  summarise(Valor = mean(Valor), .groups = "drop") |>
+  pivot_wider(names_from = Canasta, values_from = Valor) |>
+  left_join(dic.regiones, by = "Region")
 
-canastas_trim
+personas_nbi_pobreza <- personas_nbi |>
+  mutate(Periodo = paste(ANO4, TRIMESTRE, sep = ".")) |>
+  left_join(adequi, by = c("CH04", "CH06")) |>
+  left_join(Canastas_Reg, by = c("REGION", "Periodo")) |>
+  group_by(CODUSU, NRO_HOGAR, Periodo) |>
+  mutate(Adequi_hogar = sum(adequi)) |>
+  ungroup() |>
+  mutate(CBA_hogar = CBA * Adequi_hogar,
+         CBT_hogar = CBT * Adequi_hogar,
+         Situacion = case_when(ITF <  CBA_hogar ~ "Indigente",
+                               ITF <  CBT_hogar ~ "Pobre",
+                               ITF >= CBT_hogar ~ "No.Pobre"),
+         h_pobreza = if_else(Situacion %in% c("Pobre", "Indigente"), 1, 0))
+
+personas_nbi_pobreza |>
+  group_by(Anio.Semestre) |>
+  summarise(tasa_pobreza = weighted.mean(h_pobreza, PONDIH))
 ```
 
-```{r}
-base_md <- base_md %>%
-  left_join(adequi, by = c("CH04", "CH06")) %>%
-  left_join(canastas_trim, by = c("Region", "TRIMESTRE")) %>%
-  group_by(CODUSU, NRO_HOGAR, ANO4, TRIMESTRE) %>%
-  mutate(adequi_hogar = sum(adequi)) %>%
-  ungroup() %>%
-  mutate(pobre_ingresos      = if_else(ITF < CBT * adequi_hogar, 1, 0),
-         indigente_ingresos  = if_else(ITF < CBA * adequi_hogar, 1, 0))
-```
+Las tasas coinciden con las que obtuvimos en la clase 6.
 
-Recordemos que para los indicadores de ingresos se usa el ponderador `PONDIH`, que corrige la no respuesta de ingresos. Comparamos con las tasas publicadas por INDEC (31,6% y 6,9% en el primer semestre; 28,2% y 6,3% en el segundo). Puede haber diferencias de algunas décimas: INDEC valoriza la canasta del **mes** en que se hizo la entrevista, mientras que nosotros, que no tenemos el mes en la base de usuarios, usamos el promedio trimestral.
+# Método combinado
+
+## La matriz de pobreza
+
+El primer paso del método combinado es una tabla de doble entrada entre las dos mediciones. Sumamos los ponderadores de cada combinación y los dividimos por el total, de modo que las cuatro celdas sumen 100%.
 
 ```{r}
-base_md %>%
-  group_by(SEMESTRE) %>%
-  summarise(pobreza    = round(weighted.mean(pobre_ingresos,     PONDIH) * 100, 1),
-            indigencia = round(weighted.mean(indigente_ingresos, PONDIH) * 100, 1))
-```
-
-## ¿Miden lo mismo?
-
-Una primera forma de ver la relación entre los dos enfoques es replicar el corte "Pobreza por ingresos" de las Tablas A.1 y A.2 de ODSA: la incidencia de la pobreza multidimensional entre pobres y no pobres por ingresos.
-
-```{r}
-base_md %>%
-  filter(PONDIH > 0) %>%
-  mutate(pobreza_ingresos = if_else(pobre_ingresos == 1, "Pobre por ingresos", "No pobre por ingresos")) %>%
-  group_by(SEMESTRE, pobreza_ingresos) %>%
-  summarise(`PMD total`  = round(weighted.mean(pmd_total, PONDIH) * 100, 1),
-            `PMD severa` = round(weighted.mean(pmd_sev,   PONDIH) * 100, 1),
-            .groups = "drop")
-```
-
-## Una tipología: el método integrado de Katzman
-
-En los años ochenta, Rubén Katzman (CEPAL) propuso el **método integrado** de medición de la pobreza, cruzando la pobreza por ingresos (línea de pobreza) con las necesidades básicas insatisfechas. Ese cruce da lugar a cuatro situaciones con significados sociales distintos:
-
-|                       | **Con privaciones**                          | **Sin privaciones**                           |
-|------------------|---------------------------|----------------------------|
-| **Pobre por ingresos**    | **Pobreza crónica**: carencias estructurales e ingresos insuficientes | **Pobreza reciente**: ingresos insuficientes, pero sin carencias acumuladas (típica de caídas de ingresos) |
-| **No pobre por ingresos** | **Pobreza inercial**: ingresos suficientes, pero carencias estructurales aún no resueltas | **Integración social**                         |
-
-Como las NBI son una medida exigente de privación, usamos para el cruce nuestro **umbral severo**.
-
-```{r}
-katzman <- base_md %>%
-  filter(PONDIH > 0) %>%
-  mutate(tipologia = factor(
-    case_when(pobre_ingresos == 1 & pmd_sev == 1 ~ "Pobreza crónica",
-              pobre_ingresos == 1 & pmd_sev == 0 ~ "Pobreza reciente",
-              pobre_ingresos == 0 & pmd_sev == 1 ~ "Pobreza inercial",
-              pobre_ingresos == 0 & pmd_sev == 0 ~ "Integración social"),
-    levels = c("Pobreza crónica", "Pobreza reciente",
-               "Pobreza inercial", "Integración social"))) %>%
-  group_by(SEMESTRE, tipologia) %>%
-  summarise(poblacion = sum(PONDIH), .groups = "drop_last") %>%
-  mutate(porcentaje = round(poblacion / sum(poblacion) * 100, 1)) %>%
+matriz <- personas_nbi_pobreza |>
+  group_by(Anio.Semestre, h_pobreza, h_nbi) |>
+  summarise(personas = sum(PONDIH), .groups = "drop") |>
+  group_by(Anio.Semestre) |>
+  mutate(prop = personas / sum(personas)) |>
   ungroup()
 
-katzman %>%
-  select(-poblacion) %>%
-  pivot_wider(names_from = SEMESTRE, values_from = porcentaje)
+matriz |>
+  select(-personas) |>
+  pivot_wider(names_from = h_nbi, values_from = prop, names_prefix = "nbi_")
 ```
 
-```{r}
-#| fig-height: 4
-ggplot(katzman, aes(x = SEMESTRE, y = porcentaje, fill = tipologia)) +
-  geom_col(width = 0.6) +
-  geom_text(aes(label = porcentaje), position = position_stack(vjust = 0.5),
-            size = 3.5, color = "white") +
-  scale_fill_manual(values = c("Pobreza crónica"    = "#0e4d4a",
-                               "Pobreza reciente"   = "#1b7f79",
-                               "Pobreza inercial"   = "#5fb3a9",
-                               "Integración social" = "#b9b9b9")) +
-  coord_flip() +
-  labs(title = "Método integrado de medición de la pobreza (Katzman)",
-       subtitle = "Pobreza por ingresos y pobreza multidimensional severa. En % de la población.",
-       x = NULL, y = "%", fill = NULL,
-       caption = "Fuente: elaboración propia en base a EPH-INDEC.") +
-  theme_minimal() +
-  theme(legend.position = "bottom")
-```
+::: {.callout-important appearance="simple"}
+## ¿Qué ponderador usar?
 
-::: {.callout-tip appearance="simple"}
-## Para discutir
-
-¿Cómo cambió entre semestres cada uno de los cuatro grupos? Si la pobreza por ingresos baja porque mejoran los ingresos, pero las privaciones estructurales se mantienen, ¿qué grupo debería crecer? ¿Qué nos dice esto sobre los distintos tiempos de cada fenómeno?
+En esta tabla ponderamos con **PONDIH** y no con PONDERA. Cerca de una cuarta parte de las personas de la EPH vive en hogares que no respondieron (total o parcialmente) los ingresos. Esos hogares tienen `ITF = 0` y `PONDIH = 0`.
 :::
 
-# Exportamos los resultados
+## Los grupos de la matriz
 
-Guardamos los principales cuadros en un Excel, una tabla por hoja.
+Cada celda de la matriz tiene un nombre en la literatura. Los nombres varían según el autor. Por ejemplo, acá está la denominación de Minujin y Kessler.
+
+| | **Sin NBI** | **Con NBI** |
+|------------------|---------------------|---------------------|
+| **No pobre por ingresos** | No pobres (integrados) | Pobres "inerciales" |
+| **Pobre por ingresos** | Pobres recientes (empobrecidos) | Pobres estructurales (crónicos) |
+
+
+Otra pregutna interesante es **qué parte de los pobres por ingresos tiene, además, NBI**. Como vemos, la proporción es baja. Ello indicaría que la pobreza por ingresos está compuesta mayormente por hogares que no presentan carencias estructurales, o bien, que los umbrales del NBI son en la actualidad bastante laxos para lo que queremos medir. 
 
 ```{r}
-if (!dir.exists("Resultados")) dir.create("Resultados")
-
-write.xlsx(list("Incidencia"    = incidencia,
-                "Dimensiones"   = privaciones,
-                "Intensidad"    = intensidad,
-                "Sensibilidad"  = sensibilidad,
-                "Region"        = pmd_region,
-                "Katzman"       = katzman),
-           file = "Resultados/pobreza_multidimensional_2025.xlsx",
-           overwrite = TRUE)
+personas_nbi_pobreza |>
+  filter(h_pobreza == 1) |>
+  group_by(Anio.Semestre) |>
+  summarise(prop_con_nbi = weighted.mean(h_nbi, PONDIH))
 ```
 
-# Ejercicios
 
-## Ejercicios para practicar
+# Ejercicios para practicar
 
--   Calcular la incidencia de la pobreza multidimensional (umbral total y severo) para **varones y mujeres**, en cada semestre de 2025.
--   Rehacer la dimensión **educación sin el criterio de cohorte** (exigiendo secundario completo a todas las personas de 18 años y más) y recalcular la incidencia total. ¿Qué grupo de edad cambia más? ¿Por qué?
--   Construir la tipología de Katzman usando el **umbral total** en lugar del severo. ¿Qué grupo cambia más?
+-   Calcular el % de **personas** con NBI (índice final, sin NBI 5) para cada región, en el primer y segundo semestre de 2025.
+-   Calcular la matriz del método combinado (las cuatro celdas) solo para **niños, niñas y adolescentes de 0 a 17 años** y compararla con la del total de la población.
 
-## Ejercicios de tarea
 
--   Estimar la pobreza multidimensional para **niños, niñas y adolescentes (0 a 17 años)** por región y compararla con la Tabla A.1 de ODSA. Más allá de los valores, ¿qué decisiones de nuestra medición explican que no sean comparables?
--   Proponer un **índice ponderado** (como el de calidad del empleo de la clase 4), asignándole a cada dimensión un peso según su importancia, y definir un corte para identificar a los pobres. Justificar los pesos y comparar con el criterio de unión.
