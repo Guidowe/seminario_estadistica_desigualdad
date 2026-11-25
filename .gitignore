@@ -30,3 +30,6 @@ Thumbs.db
 Resultados/*
 !Resultados/.gitkeep
 .positai
+
+#Canastas indec
+canastas_api_indec.R
